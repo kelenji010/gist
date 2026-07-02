@@ -1,7 +1,7 @@
 # Gist: an inclusive puzzle storytelling game
 
 
-<img src="https://raw.githubusercontent.com/kjelenji/gist/main/myapp/static/icon.png" alt="Gist Logo" width="130"/>
+<img src="https://raw.githubusercontent.com/kjelenji/gist/main/myapp/static/gistv3.png" alt="Gist Logo" width="130"/>
 
 ---
 
