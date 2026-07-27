@@ -1,9 +1,13 @@
 <script>
-	import favicon from '$lib/assets/favicon.svg';
-	import '../public/styles.css';
-	let { children } = $props();
+  // Root layout — wraps every page. Keep global head tags here.
+  import favicon from '$lib/assets/favicon.svg';
+
+  let { children } = $props();
 </script>
+
 <svelte:head>
-	<link rel="icon" href={favicon} />
+  <link rel="icon" href={favicon} />
+  <title>Gist</title>
 </svelte:head>
+
 {@render children()}

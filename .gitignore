@@ -1,5 +1,25 @@
+# Dependencies
 node_modules/
+myapp/node_modules/
+
+# Build output
+myapp/.svelte-kit/
+myapp/build/
+myapp/.output/
+
+# Environment / secrets (never commit these)
+.env
+.env.*
+!.env.example
+myapp/.env
 serviceAccount.json
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.cursor/mcp.json
+
+# Old generated folders (if they reappear)
 tmp/
 generated_metadata/
-.env
