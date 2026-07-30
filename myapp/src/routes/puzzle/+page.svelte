@@ -50,6 +50,8 @@
   let swiping = $state(false);
   let swipeMoved = false;
   let swipeStartId: string | null = null;
+  /** Last cell under the finger (includes solved/empty tiles for pathing). */
+  let swipeCursorId: string | null = null;
   let activePointerId: number | null = null;
 
   const solvedWords = $derived(
@@ -117,11 +119,16 @@
     };
   }
 
-  /** True if two cells share an edge (no diagonals). */
+  /** True if two cells share an edge (no diagonals). Corners/edges of the board are fine. */
   function isOrthogonalNeighbors(a: string, b: string) {
     const A = cellCoords(a);
     const B = cellCoords(b);
     return Math.abs(A.col - B.col) + Math.abs(A.row - B.row) === 1;
+  }
+
+  /** Solved tiles are empty for combining but can be crossed while swiping. */
+  function canPathThrough(cellId: string) {
+    return isSolvedCell(cellId);
   }
 
   function tryAddToSwipe(cellId: string) {
@@ -138,10 +145,6 @@
     }
 
     if (selected.length >= 3) return;
-    // Only allow up / down / left / right from the last tile
-    const last = selected[selected.length - 1];
-    if (last && !isOrthogonalNeighbors(last, cellId)) return;
-
     selected = [...selected, cellId];
   }
 
@@ -155,6 +158,7 @@
       swiping = true;
       swipeMoved = false;
       swipeStartId = cellId;
+      swipeCursorId = cellId;
       activePointerId = event.pointerId;
       selected = [];
       feedback = '';
@@ -169,6 +173,7 @@
     swiping = true;
     swipeMoved = false;
     swipeStartId = cellId;
+    swipeCursorId = cellId;
     activePointerId = event.pointerId;
     selected = [cellId];
     feedback = '';
@@ -182,8 +187,17 @@
     if (!id) return;
 
     if (id !== swipeStartId) swipeMoved = true;
+    if (id === swipeCursorId) return;
 
-    // Don't swipe-select empty fill-ins
+    // Only step to an edge-neighbor (no diagonals)
+    if (swipeCursorId && !isOrthogonalNeighbors(swipeCursorId, id)) return;
+
+    swipeCursorId = id;
+
+    // Cross solved/empty combined tiles without selecting them
+    if (canPathThrough(id)) return;
+
+    // Don't path through unfilled fill-ins
     if (!displayWord(id)) return;
 
     tryAddToSwipe(id);
@@ -199,6 +213,7 @@
     swiping = false;
     swipeMoved = false;
     swipeStartId = null;
+    swipeCursorId = null;
     activePointerId = null;
 
     // Tap on fill-in (empty or filled) → open picker to set/change icon
