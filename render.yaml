@@ -1,0 +1,22 @@
+# Render Blueprint — weekly Gist puzzle
+# Dashboard: https://dashboard.render.com/web/srv-d7qbt6n7f7vs73csods0
+#
+# Set these env vars in the Render service:
+#   SUPABASE_URL
+#   SUPABASE_PUBLISHABLE_KEY
+
+services:
+  - type: web
+    name: gist
+    runtime: node
+    rootDir: myapp
+    buildCommand: npm install && npm run build
+    startCommand: node build
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false

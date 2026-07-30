@@ -1,8 +1,8 @@
 # gist
 
-weekly puzzle game. **All app code is in `myapp/`.**
+Weekly icon puzzle. **All app code is in `myapp/`.**
 
-## Run the app
+## Run locally
 
 ```bash
 cd myapp
@@ -10,24 +10,28 @@ npm install
 npm run dev
 ```
 
-Then open the URL Vite prints (usually http://localhost:5173).
+Copy `myapp/.env.example` → `myapp/.env` and add your Supabase keys.
+Then run the SQL in `myapp/supabase/schema.sql` (or `weekly_scores_collectibles.sql`) in the Supabase SQL editor.
 
-For a beginner-friendly map of every file, open **`myapp/README.md`**.
+## Deploy (Render)
 
-## Repo layout
+- Root directory: `myapp`
+- Build: `npm install && npm run build`
+- Start: `node build`
+- Env: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `NODE_VERSION=20`
 
-```
-Gist/
-  README.md          ← you are here
-  myapp/             ← the real SvelteKit app (edit files in here)
-  .gitignore
-```
+## How it works
+
+- One puzzle play **per username per week**
+- Finishing assigns a random username (`Gist_xxxx`), saves score + collectible to Supabase
+- Same browser can’t replay that week (and the server rejects duplicate username/week scores)
 
 ## Pages
 
-| Page   | URL        | File to edit                              |
-|--------|------------|-------------------------------------------|
-| Home   | `/`        | `myapp/src/routes/+page.svelte`           |
-| Puzzle | `/puzzle`  | `myapp/src/routes/puzzle/+page.svelte`    |
-| Login  | `/login`   | `myapp/src/routes/login/+page.svelte`     |
-| Result | `/result`  | `myapp/src/routes/result/+page.svelte`    |
+| Page        | URL            |
+|-------------|----------------|
+| Home        | `/`            |
+| Puzzle      | `/puzzle`      |
+| Result      | `/result`      |
+| Scoreboard  | `/leaderboard` |
+| Terms       | `/terms`       |

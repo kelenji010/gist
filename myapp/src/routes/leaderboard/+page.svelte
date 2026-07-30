@@ -1,30 +1,44 @@
 <script lang="ts">
   /**
    * LEADERBOARD PAGE (/leaderboard)
-   * Loads scores from GET /api/scoreboard (Supabase).
+   * Weekly scoreboard from GET /api/scoreboard.
    */
   import { onMount } from 'svelte';
   import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
+  import { getUsername, hasPlayedThisWeek } from '$lib/player.js';
 
   interface ScoreEntry {
     id: string;
     username: string;
     points: number;
     date: number;
+    weekKey?: string;
   }
 
   let entries = $state<ScoreEntry[]>([]);
+  let weekKey = $state('');
   let loading = $state(true);
   let error = $state('');
+  let me = $state('');
+  let played = $state(false);
 
   onMount(async () => {
+    me = getUsername();
+    played = hasPlayedThisWeek();
     try {
       const response = await fetch('/api/scoreboard');
       if (!response.ok) throw new Error('Failed to load scoreboard');
-      entries = await response.json();
+      const data = await response.json();
+      // Support both new { entries } and legacy array shapes
+      if (Array.isArray(data)) {
+        entries = data;
+      } else {
+        entries = data.entries ?? [];
+        weekKey = data.weekKey ?? '';
+      }
     } catch {
-      error = 'Could not load scoreboard. Check that Supabase is set up in .env.';
+      error = 'Could not load scoreboard. Check that Supabase is set up.';
     } finally {
       loading = false;
     }
@@ -34,7 +48,6 @@
     return new Date(ts).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
     });
   }
 </script>
@@ -43,7 +56,15 @@
   <div class="leaderboard">
     <div class="header">
       <h1>Scoreboard</h1>
-      <p class="subtitle">Top scores</p>
+      <p class="subtitle">
+        This week’s top scores
+        {#if weekKey}
+          <span class="week">· week of {weekKey}</span>
+        {/if}
+      </p>
+      {#if me}
+        <p class="you">You are <strong>{me}</strong></p>
+      {/if}
     </div>
 
     {#if loading}
@@ -52,8 +73,10 @@
       <p class="status error">{error}</p>
     {:else if entries.length === 0}
       <div class="status">
-        <p>No scores yet. Be the first to play!</p>
-        <Button onclick={() => goto('/puzzle')} class="btn-primary">Play Now</Button>
+        <p>No scores yet this week. Be the first!</p>
+        {#if !played}
+          <Button onclick={() => goto('/puzzle')} class="btn-primary">Play Now</Button>
+        {/if}
       </div>
     {:else}
       <div class="table-wrap">
@@ -68,7 +91,7 @@
           </thead>
           <tbody>
             {#each entries as entry, i}
-              <tr class:top-three={i < 3}>
+              <tr class:top-three={i < 3} class:me={entry.username === me}>
                 <td class="rank">{i + 1}</td>
                 <td class="name">{entry.username}</td>
                 <td class="points">{entry.points}</td>
@@ -81,7 +104,11 @@
     {/if}
 
     <div class="actions">
-      <Button onclick={() => goto('/puzzle')} class="btn-primary">Play Puzzle</Button>
+      {#if !played}
+        <Button onclick={() => goto('/puzzle')} class="btn-primary">Play Puzzle</Button>
+      {:else}
+        <Button onclick={() => goto('/result')} class="btn-primary">View Result</Button>
+      {/if}
       <Button onclick={() => goto('/')} class="btn-secondary">Home</Button>
     </div>
   </div>
@@ -101,7 +128,7 @@
 
   .header h1 {
     margin: 0;
-    font-size: 2.2rem;
+    font-size: clamp(1.75rem, 5vw, 2.2rem);
     color: var(--gist-text);
   }
 
@@ -110,9 +137,19 @@
     color: var(--gist-text-muted);
   }
 
+  .week {
+    font-size: 0.9em;
+  }
+
+  .you {
+    margin: 0.65rem 0 0;
+    color: var(--gist-text);
+    font-size: 0.95rem;
+  }
+
   .status {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 3rem 1.5rem;
     color: var(--gist-text-muted);
   }
 
@@ -121,18 +158,21 @@
   }
 
   .table-wrap {
-    padding: 1.5rem 1rem;
+    padding: 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 320px;
   }
 
   th {
     text-align: left;
-    padding: 0.8rem 1rem;
-    font-size: 0.8rem;
+    padding: 0.8rem 0.75rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--gist-text-muted);
@@ -140,13 +180,17 @@
   }
 
   td {
-    padding: 1rem;
+    padding: 0.85rem 0.75rem;
     border-bottom: 1px solid var(--gist-bg);
   }
 
   tr.top-three .rank {
     font-weight: 800;
     color: var(--gist-primary);
+  }
+
+  tr.me {
+    background: #f0f7fc;
   }
 
   .rank {
@@ -158,6 +202,7 @@
   .name {
     font-weight: 600;
     color: var(--gist-text);
+    word-break: break-word;
   }
 
   .points {
@@ -168,5 +213,6 @@
   .date {
     color: var(--gist-text-muted);
     font-size: 0.9rem;
+    white-space: nowrap;
   }
 </style>

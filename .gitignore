@@ -23,3 +23,6 @@ Thumbs.db
 # Old generated folders (if they reappear)
 tmp/
 generated_metadata/
+
+# Local icon crop debug dumps
+myapp/scripts/debug_crops/

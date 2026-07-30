@@ -1,6 +1,6 @@
 <script>
   // Root layout — wraps every page. Keep global head tags here.
-  import favicon from '$lib/assets/favicon.svg';
+  import favicon from '$lib/assets/gist.png';
 
   let { children } = $props();
 </script>

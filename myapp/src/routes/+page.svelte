@@ -1,25 +1,35 @@
 <script lang="ts">
   /**
    * HOME PAGE (/)
-   * Lobby screen: logo, difficulty toggle, Play / Result buttons.
-   * Edit the look here; game logic lives on /puzzle.
+   * Weekly puzzle lobby — one play per username per week.
    */
-  import { Tooltip, Button } from 'flowbite-svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { hasPlayedToday } from '$lib/player.js';
+  import { hasPlayedThisWeek, getUsername } from '$lib/player.js';
 
   let selectedMode = $state<'easy' | 'hard'>('easy');
-  let playedToday = $state(false);
+  let playedThisWeek = $state(false);
+  let username = $state('');
+  let openPanel = $state<'info' | 'scoreboard' | null>(null);
 
   onMount(() => {
-    playedToday = hasPlayedToday();
+    playedThisWeek = hasPlayedThisWeek();
+    username = getUsername();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') openPanel = null;
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   });
 
+  function togglePanel(id: 'info' | 'scoreboard') {
+    openPanel = openPanel === id ? null : id;
+  }
+
   function play(mode: 'easy' | 'hard') {
-    // If they already played today, send them to practice mode.
-    if (playedToday) {
-      goto(`/puzzle?mode=${mode}&practice=1`);
+    if (playedThisWeek) {
+      goto('/result');
       return;
     }
     goto(`/puzzle?mode=${mode}`);
@@ -30,34 +40,48 @@
   <div class="container">
     <div class="border">
       <div class="top-border">
-        <Button class="icon-btn" id="info">ⓘ</Button>
-        <Tooltip triggeredBy="#info" placement="bottom" strategy="fixed" class="minimal-tooltip">
-          <div class="tooltip-container">
-            <div class="tooltip-header">How to Play</div>
-            <div class="step">
-              <span class="step-label">Open the puzzle</span>
-              <p>Tap Play Now to open today's board.</p>
+        <div class="panel-anchor">
+          <button
+            type="button"
+            class="icon-btn"
+            aria-label="How to play"
+            aria-expanded={openPanel === 'info'}
+            onclick={() => togglePanel('info')}
+          >ⓘ</button>
+          {#if openPanel === 'info'}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div class="panel-backdrop" role="presentation" onclick={() => (openPanel = null)}></div>
+            <div class="panel panel-left" role="dialog" aria-label="How to play">
+              <div class="panel-header">How to Play</div>
+              <ol class="steps">
+                <li>
+                  <strong>Fill the blanks</strong>
+                  <span>Tap a dashed tile and pick an icon. Tap again to change it.</span>
+                </li>
+                <li>
+                  <strong>Combine three</strong>
+                  <span>Swipe across 3 icons that belong together. Swipe back to undo.</span>
+                </li>
+                <li>
+                  <strong>One play per week</strong>
+                  <span>Finish to earn a random username, scoreboard entry, and collectible.</span>
+                </li>
+              </ol>
             </div>
-            <div class="step">
-              <span class="step-label">Solve it</span>
-              <p>Follow the rules on the puzzle screen.</p>
-            </div>
-            <div class="step">
-              <span class="step-label">See your result</span>
-              <p>When you finish, you'll land on the result page.</p>
-            </div>
-          </div>
-        </Tooltip>
+          {/if}
+        </div>
 
         <div class="top-actions">
           <div class="toggle" role="group" aria-label="Difficulty">
             <button
+              type="button"
               class="toggle-option"
               class:active={selectedMode === 'easy'}
               aria-pressed={selectedMode === 'easy'}
               onclick={() => (selectedMode = 'easy')}
             >Easy</button>
             <button
+              type="button"
               class="toggle-option"
               class:active={selectedMode === 'hard'}
               aria-pressed={selectedMode === 'hard'}
@@ -65,16 +89,30 @@
             >Not so easy</button>
           </div>
 
-          <Button class="icon-btn" id="leaderboard" onclick={() => goto('/leaderboard')}>🜲</Button>
-          <Tooltip triggeredBy="#leaderboard" placement="bottom" strategy="fixed" class="minimal-tooltip">
-            <div class="tooltip-container">
-              <div class="tooltip-header">Scoreboard</div>
-              <div class="step">
-                <span class="step-label">See top scores</span>
-                <p>Play a puzzle and add your username to join!</p>
+          <div class="panel-anchor">
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label="Scoreboard"
+              aria-expanded={openPanel === 'scoreboard'}
+              onclick={() => togglePanel('scoreboard')}
+            >🜲</button>
+            {#if openPanel === 'scoreboard'}
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <div class="panel-backdrop" role="presentation" onclick={() => (openPanel = null)}></div>
+              <div class="panel panel-right" role="dialog" aria-label="Scoreboard">
+                <div class="panel-header">Scoreboard</div>
+                <p class="panel-body">
+                  Weekly top scores. Finish a puzzle to get a random username and join automatically.
+                </p>
+                <button
+                  type="button"
+                  class="panel-link"
+                  onclick={() => goto('/leaderboard')}
+                >Open scoreboard</button>
               </div>
-            </div>
-          </Tooltip>
+            {/if}
+          </div>
         </div>
       </div>
 
@@ -83,28 +121,39 @@
           <img src="/gistv4.png" width="250" alt="Gist Logo" />
         </div>
 
-        <h3 class="text">Combine icons until <br /> one remains!</h3>
+        <h3 class="text">Combine icons until <br /> none remain!</h3>
 
         <div class="center">
           <div class="split">
-            <button onclick={() => play(selectedMode)} class="btn-group btn-primary">
-              {playedToday ? 'Play Practice' : 'Play Now'}
+            <button
+              type="button"
+              onclick={() => play(selectedMode)}
+              class="btn-group btn-primary"
+              disabled={playedThisWeek}
+            >
+              {playedThisWeek ? 'Already played' : 'Play Now'}
             </button>
-            <button onclick={() => goto('/result')} class="btn-group btn-secondary">
-              {playedToday ? 'View Result' : 'Result'}
+            <button type="button" onclick={() => goto('/result')} class="btn-group btn-secondary">
+              Result
             </button>
           </div>
         </div>
 
-        {#if playedToday}
-          <p class="daily-note">
-            Official puzzle done for today — practice rounds don't count toward the daily limit.
+        {#if playedThisWeek}
+          <p class="weekly-note">
+            You’ve played this week’s puzzle
+            {#if username}
+              as <strong>{username}</strong>
+            {/if}.
+            Come back next week!
           </p>
+        {:else}
+          <p class="weekly-note muted">New puzzle every week · one play per player</p>
         {/if}
       </div>
 
       <footer class="footer">
-        <p>© 2026 Gist | <a href="/terms">Terms</a> · <a href="/login">Log in</a></p>
+        <p>© 2026 Gist | <a href="/terms">Terms</a></p>
       </footer>
     </div>
   </div>
@@ -113,7 +162,9 @@
 <style>
   main {
     width: 100%;
-    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
 
   .container {
@@ -121,11 +172,17 @@
     width: 100%;
     margin: 0 auto;
     padding: 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .border {
     background: white;
-    overflow: hidden;
+    overflow: visible;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .top-border {
@@ -135,17 +192,126 @@
     gap: 0.75rem;
     padding: 1rem 1.5rem;
     color: var(--gist-text);
+    position: relative;
+    z-index: 5;
   }
 
   .top-actions {
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .panel-anchor {
+    position: relative;
+  }
+
+  .icon-btn {
+    background: var(--gist-bg);
+    color: #33566b;
+    border: 1px solid var(--gist-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0.45rem 0.7rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    cursor: pointer;
+  }
+
+  .icon-btn:hover {
+    background: #d8e8f3;
+  }
+
+  .panel-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+  }
+
+  .panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    z-index: 30;
+    width: min(280px, calc(100vw - 2rem));
+    padding: 1rem 1.1rem;
+    background: #fff;
+    border: 1.5px solid var(--gist-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(45, 74, 98, 0.12);
+    text-align: left;
+  }
+
+  .panel-left {
+    left: 0;
+  }
+
+  .panel-right {
+    right: 0;
+  }
+
+  .panel-header {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gist-text);
+  }
+
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .steps li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .steps strong {
+    font-size: 0.9rem;
+    color: var(--gist-text);
+  }
+
+  .steps span,
+  .panel-body {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--gist-text-muted);
+  }
+
+  .panel-link {
+    display: inline-flex;
+    margin-top: 0.85rem;
+    padding: 0.55rem 0.85rem;
+    min-height: 44px;
+    align-items: center;
+    border: 1px solid var(--gist-border-strong);
+    border-radius: 8px;
+    background: var(--gist-bg);
+    color: var(--gist-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .panel-link:hover {
+    background: #d8e8f3;
   }
 
   .inner-border {
     padding: 3rem 2rem;
     text-align: center;
+    flex: 1;
   }
 
   .center {
@@ -158,21 +324,6 @@
     justify-content: center;
     flex-wrap: wrap;
     margin-bottom: 1rem;
-  }
-
-  :global(.icon-btn) {
-    background: var(--gist-bg) !important;
-    color: #33566b !important;
-    border: 1px solid var(--gist-border) !important;
-    border-radius: 8px !important;
-    font-size: 1rem !important;
-    line-height: 1 !important;
-    padding: 0.4rem 0.7rem !important;
-    box-shadow: none !important;
-  }
-
-  :global(.icon-btn:hover) {
-    background: #d8e8f3 !important;
   }
 
   .toggle {
@@ -188,7 +339,8 @@
     border: none;
     background: transparent;
     color: #33566b;
-    padding: 0.32rem 0.75rem;
+    padding: 0.4rem 0.75rem;
+    min-height: 36px;
     border-radius: 7px;
     font-weight: 700;
     font-size: 0.8rem;
@@ -207,15 +359,23 @@
     font-weight: 600;
   }
 
-  .daily-note {
+  .weekly-note {
     text-align: center;
-    color: var(--gist-text-muted);
+    color: var(--gist-text);
     font-weight: 600;
     margin: 0.25rem 0 0;
+    line-height: 1.4;
+    padding: 0 0.5rem;
+  }
+
+  .weekly-note.muted {
+    color: var(--gist-text-muted);
+    font-weight: 500;
   }
 
   :global(.btn-group) {
     padding: 0.9rem 2rem;
+    min-height: 48px;
     border-radius: 10px;
     font-weight: 700;
     cursor: pointer;
@@ -227,6 +387,12 @@
     color: #fff;
     border: none;
     box-shadow: 0 2px 8px rgba(94, 143, 182, 0.35);
+  }
+
+  :global(.btn-group.btn-primary:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   :global(.btn-group.btn-secondary) {
@@ -242,6 +408,7 @@
     text-align: center;
     color: var(--gist-text-muted);
     font-size: 0.9rem;
+    margin-top: auto;
   }
 
   .footer a {
@@ -259,12 +426,24 @@
         max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
     }
 
+    .top-border {
+      padding: 0.85rem 1rem;
+    }
+
     .inner-border {
-      padding: 2rem 1.5rem;
+      padding: 2rem 1rem;
     }
 
     .text {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
+    }
+
+    .center {
+      margin: 1.25rem 0;
+    }
+
+    .panel {
+      width: min(260px, calc(100vw - 1.5rem));
     }
   }
 </style>
