@@ -1,4 +1,4 @@
-# Gist
+# gist
 
 weekly puzzle game. **All app code is in `myapp/`.**
 
