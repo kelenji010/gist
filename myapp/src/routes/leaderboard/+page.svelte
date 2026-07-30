@@ -38,7 +38,7 @@
         weekKey = data.weekKey ?? '';
       }
     } catch {
-      error = 'Could not load scoreboard. Check that Supabase is set up.';
+      error = 'could not load scoreboard';
     } finally {
       loading = false;
     }

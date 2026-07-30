@@ -148,7 +148,7 @@
             Come back next week!
           </p>
         {:else}
-          <p class="weekly-note muted">New puzzle every week · one play per player</p>
+          <p class="weekly-note muted">new puzzle every week</p>
         {/if}
       </div>
 
