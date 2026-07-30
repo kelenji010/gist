@@ -109,6 +109,21 @@
     return tile?.dataset?.cellId ?? null;
   }
 
+  /** Column/row for cell ids like "a1" (col 0–2, row 0–2). */
+  function cellCoords(id: string) {
+    return {
+      col: id.charCodeAt(0) - 97,
+      row: Number(id[1]) - 1,
+    };
+  }
+
+  /** True if two cells share an edge (no diagonals). */
+  function isOrthogonalNeighbors(a: string, b: string) {
+    const A = cellCoords(a);
+    const B = cellCoords(b);
+    return Math.abs(A.col - B.col) + Math.abs(A.row - B.row) === 1;
+  }
+
   function tryAddToSwipe(cellId: string) {
     if (!cellId || isSolvedCell(cellId)) return;
     if (!displayWord(cellId)) return;
@@ -123,6 +138,10 @@
     }
 
     if (selected.length >= 3) return;
+    // Only allow up / down / left / right from the last tile
+    const last = selected[selected.length - 1];
+    if (last && !isOrthogonalNeighbors(last, cellId)) return;
+
     selected = [...selected, cellId];
   }
 
