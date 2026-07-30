@@ -1,6 +1,6 @@
 # Gist
 
-Daily puzzle game. **All app code is in `myapp/`.**
+weekly puzzle game. **All app code is in `myapp/`.**
 
 ## Run the app
 
