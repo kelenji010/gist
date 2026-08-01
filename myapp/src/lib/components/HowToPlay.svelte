@@ -1,16 +1,16 @@
 <script>
   /**
    * How to Play — shared directions with demos.
-   * Theme/rebus examples use non-puzzle art from /howto/.
+   * Link/rebus examples use non-puzzle art from /howto/.
    */
   let { onClose = undefined } = $props();
 
-  const themeParts = [
+  const linkParts = [
     { src: '/howto/grass.png', label: 'grass' },
     { src: '/howto/moss.png', label: 'moss' },
     { src: '/howto/vines.png', label: 'vines' },
   ];
-  const themeResult = { src: '/howto/green-plants.png', label: 'green plants' };
+  const linkResult = { src: '/howto/green-plants.png', label: 'green plants' };
 
   const rebusParts = [
     { src: '/howto/car.png', label: 'car' },
@@ -29,8 +29,24 @@
   </div>
 
   <section class="step">
+    <h3>What’s on every board</h3>
+    <p>
+      Each week has <strong>2 fill-ins</strong>, <strong>2 rebuses</strong>, and
+      <strong>2 links</strong>.
+    </p>
+    <ul class="board-facts">
+      <li><strong>Fill-ins</strong> — dashed tiles you complete by picking an icon.</li>
+      <li>
+        <strong>Rebuses</strong> — sounds stack into a new word. One rebus result always sits
+        in the <strong>top strip</strong>; the other rebus is found on the puzzle board.
+      </li>
+      <li><strong>Links</strong> — three icons that belong to the same idea or category.</li>
+    </ul>
+  </section>
+
+  <section class="step">
     <h3>1. Fill the blanks</h3>
-    <p>Tap a dashed tile and pick an icon. Tap again to change it.</p>
+    <p>There are always 2 fill-ins. Tap a dashed tile and pick an icon. Tap again to change it.</p>
     <div class="demo demo-fill" aria-hidden="true">
       <div class="demo-tile dashed">
         <span class="blank"></span>
@@ -59,7 +75,7 @@
     <h3>2. Combine three</h3>
     <p>
       Swipe <strong>orthogonally</strong> (up, down, left, or right — edges only, no diagonals)
-      across 3 icons that belong together under the same theme or a rebus.
+      across 3 icons that form a <strong>link</strong> or a <strong>rebus</strong>.
     </p>
 
     <div class="ortho" aria-hidden="true">
@@ -80,9 +96,9 @@
 
     <div class="examples">
       <div class="example">
-        <p class="caption">Same theme</p>
+        <p class="caption">Link</p>
         <div class="example-row">
-          {#each themeParts as part, i}
+          {#each linkParts as part, i}
             {#if i > 0}<span class="plus">+</span>{/if}
             <span class="ex-icon">
               <img src={part.src} alt="" />
@@ -91,8 +107,8 @@
           {/each}
           <span class="eq">=</span>
           <span class="ex-icon">
-            <img src={themeResult.src} alt="" />
-            <span class="ex-label">{themeResult.label}</span>
+            <img src={linkResult.src} alt="" />
+            <span class="ex-label">{linkResult.label}</span>
           </span>
         </div>
         <p class="example-note">Icons that belong to one idea or category.</p>
@@ -177,6 +193,21 @@
     font-size: 0.88rem;
     line-height: 1.45;
     color: var(--gist-text-muted);
+  }
+
+  .board-facts {
+    margin: 0;
+    padding: 0 0 0 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--gist-text-muted);
+  }
+
+  .board-facts strong {
+    color: var(--gist-text);
   }
 
   .caption {
