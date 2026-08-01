@@ -2,13 +2,20 @@
   /**
    * RESULT PAGE (/result)
    * Shows username, score, collectible, and answer key.
+   * Lets players claim/retry scoreboard save with their username.
    */
   import { onMount } from 'svelte';
   import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
   import Icon from '$lib/components/Icon.svelte';
-  import { loadResult, formatTime } from '$lib/resultStore.js';
-  import { getUsername, getLocalCollectibles } from '$lib/player.js';
+  import { loadResult, saveResult, formatTime } from '$lib/resultStore.js';
+  import {
+    getUsername,
+    setUsername,
+    generateUsername,
+    validateUsername,
+    getLocalCollectibles,
+  } from '$lib/player.js';
 
   let result = $state<{
     won: boolean;
@@ -16,17 +23,77 @@
     points?: number;
     username?: string;
     weekKey?: string;
+    scoreSaved?: boolean;
     answers: { word: string; cells: string[]; icons: string[] }[];
     collectible?: { number: string; word: string } | null;
   } | null>(null);
-  let username = $state('');
+  let usernameDraft = $state('');
+  let usernameError = $state('');
+  let scoreSaved = $state(false);
+  let saving = $state(false);
+  let saveMessage = $state('');
   let collectibles = $state<{ number: string; word: string }[]>([]);
 
   onMount(() => {
     result = loadResult();
-    username = result?.username || getUsername();
+    usernameDraft = result?.username || getUsername() || '';
+    scoreSaved = !!result?.scoreSaved;
     collectibles = getLocalCollectibles();
   });
+
+  function randomName() {
+    usernameDraft = generateUsername();
+    usernameError = '';
+  }
+
+  async function submitScore() {
+    if (!result || saving) return;
+    const v = validateUsername(usernameDraft);
+    if (!v.ok) {
+      usernameError = v.error || 'Invalid username';
+      return;
+    }
+
+    saving = true;
+    usernameError = '';
+    saveMessage = '';
+    const username = setUsername(v.username);
+
+    try {
+      const res = await fetch('/api/scoreboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          points: result.points ?? 0,
+          weekKey: result.weekKey,
+          collectible: result.collectible,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 409) {
+        usernameError = 'That username already played this week. Try another.';
+        return;
+      }
+
+      if (!res.ok) {
+        usernameError = data.error || 'could not save score';
+        return;
+      }
+
+      scoreSaved = true;
+      saveMessage = `Saved ${result.points ?? 0} points as ${username}`;
+      const next = { ...result, username, scoreSaved: true };
+      result = next;
+      saveResult(next);
+    } catch {
+      usernameError = 'could not save score';
+    } finally {
+      saving = false;
+    }
+  }
 </script>
 
 <main class="page page-center">
@@ -42,17 +109,43 @@
       </div>
     {:else}
       <h1 class="title">{result.won ? 'You won!' : 'Nice try'}</h1>
-      <p class="sub">
-        Time: <strong>{formatTime(result.elapsedSeconds)}</strong>
-        {#if result.points != null}
-          · Score: <strong>{result.points}</strong>
-        {/if}
-      </p>
+      <p class="sub">Time: <strong>{formatTime(result.elapsedSeconds)}</strong></p>
 
-      {#if username}
+      <div class="score-box">
+        <p class="score-label">Points</p>
+        <p class="score-value">{result.points ?? 0}</p>
+        <p class="score-hint">Faster clears and more lives left score higher.</p>
+      </div>
+
+      {#if scoreSaved}
         <p class="username-line">
-          Playing as <strong>{username}</strong>
+          On the scoreboard as <strong>{result.username || usernameDraft}</strong>
         </p>
+        {#if saveMessage}
+          <p class="save-ok">{saveMessage}</p>
+        {/if}
+      {:else}
+        <div class="username-box">
+          <label for="result-username">Username for scoreboard</label>
+          <div class="username-row">
+            <input
+              id="result-username"
+              type="text"
+              maxlength="20"
+              autocomplete="username"
+              placeholder="Choose a name"
+              bind:value={usernameDraft}
+              oninput={() => (usernameError = '')}
+            />
+            <button type="button" class="ghost-btn" onclick={randomName}>Random</button>
+          </div>
+          {#if usernameError}
+            <p class="field-error">{usernameError}</p>
+          {/if}
+          <Button onclick={submitScore} class="btn-primary save-btn" disabled={saving}>
+            {saving ? 'Saving…' : 'Save score'}
+          </Button>
+        </div>
       {/if}
 
       {#if result.won && result.collectible}
@@ -61,7 +154,9 @@
           <div class="card-icon">
             <Icon word={result.collectible.word} size={96} label={false} />
           </div>
-          <p class="card-time">Saved to {username || 'your profile'}</p>
+          <p class="card-time">
+            {scoreSaved ? `Saved to ${result.username || usernameDraft}` : 'Save your score to keep this on the board'}
+          </p>
         </div>
       {/if}
 
@@ -122,7 +217,39 @@
   }
 
   .sub {
-    margin: 0 0 0.5rem;
+    margin: 0 0 1rem;
+    color: var(--gist-text-muted);
+  }
+
+  .score-box {
+    border: 1.5px solid var(--gist-border-strong);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin: 0 auto 1.25rem;
+    background: var(--gist-surface-alt, #f4f9fc);
+    max-width: 280px;
+  }
+
+  .score-label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gist-text-muted);
+  }
+
+  .score-value {
+    margin: 0.2rem 0;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--gist-text);
+    line-height: 1.1;
+  }
+
+  .score-hint {
+    margin: 0;
+    font-size: 0.8rem;
     color: var(--gist-text-muted);
   }
 
@@ -130,6 +257,70 @@
     margin: 0 0 1.25rem;
     color: var(--gist-text);
     font-size: 0.95rem;
+  }
+
+  .save-ok {
+    margin: -0.5rem 0 1.25rem;
+    color: var(--gist-primary-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .username-box {
+    text-align: left;
+    max-width: 340px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .username-box label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gist-text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .username-row {
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .username-row input {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--gist-border-strong);
+    border-radius: 10px;
+    font-size: 1rem;
+    color: var(--gist-text);
+  }
+
+  .ghost-btn {
+    min-height: 44px;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    border: 1.5px solid var(--gist-border);
+    background: var(--gist-bg);
+    color: var(--gist-text);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .field-error {
+    margin: 0.4rem 0 0;
+    font-size: 0.8rem;
+    color: #c45b5b;
+    font-weight: 600;
+  }
+
+  :global(.save-btn) {
+    width: 100%;
+    margin-top: 0.75rem !important;
   }
 
   .panel {

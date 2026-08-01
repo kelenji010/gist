@@ -5,34 +5,61 @@
    */
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { hasPlayedThisWeek, getUsername } from '$lib/player.js';
+  import {
+    hasPlayedThisWeek,
+    getUsername,
+    setUsername,
+    generateUsername,
+    validateUsername,
+  } from '$lib/player.js';
+  import HowToPlay from '$lib/components/HowToPlay.svelte';
 
-  let selectedMode = $state<'easy' | 'hard'>('easy');
   let playedThisWeek = $state(false);
   let username = $state('');
-  let openPanel = $state<'info' | 'scoreboard' | null>(null);
+  let usernameDraft = $state('');
+  let usernameError = $state('');
+  let openPanel = $state<'scoreboard' | null>(null);
+  let showHowTo = $state(false);
 
   onMount(() => {
     playedThisWeek = hasPlayedThisWeek();
     username = getUsername();
+    usernameDraft = username;
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') openPanel = null;
+      if (e.key === 'Escape') {
+        openPanel = null;
+        showHowTo = false;
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  function togglePanel(id: 'info' | 'scoreboard') {
-    openPanel = openPanel === id ? null : id;
+  function saveName() {
+    const v = validateUsername(usernameDraft);
+    if (!v.ok) {
+      usernameError = v.error || 'Invalid username';
+      return false;
+    }
+    username = setUsername(v.username);
+    usernameDraft = username;
+    usernameError = '';
+    return true;
   }
 
-  function play(mode: 'easy' | 'hard') {
+  function randomName() {
+    usernameDraft = generateUsername();
+    usernameError = '';
+  }
+
+  function play() {
     if (playedThisWeek) {
       goto('/result');
       return;
     }
-    goto(`/puzzle?mode=${mode}`);
+    if (!saveName()) return;
+    goto('/puzzle');
   }
 </script>
 
@@ -40,71 +67,29 @@
   <div class="container">
     <div class="border">
       <div class="top-border">
-        <div class="panel-anchor">
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label="How to play"
-            aria-expanded={openPanel === 'info'}
-            onclick={() => togglePanel('info')}
-          >ⓘ</button>
-          {#if openPanel === 'info'}
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <div class="panel-backdrop" role="presentation" onclick={() => (openPanel = null)}></div>
-            <div class="panel panel-left" role="dialog" aria-label="How to play">
-              <div class="panel-header">How to Play</div>
-              <ol class="steps">
-                <li>
-                  <strong>Fill the blanks</strong>
-                  <span>Tap a dashed tile and pick an icon. Tap again to change it.</span>
-                </li>
-                <li>
-                  <strong>Combine three</strong>
-                  <span>Swipe across 3 icons that belong together. Swipe back to undo.</span>
-                </li>
-                <li>
-                  <strong>One play per week</strong>
-                  <span>Finish to earn a random username, scoreboard entry, and collectible.</span>
-                </li>
-              </ol>
-            </div>
-          {/if}
-        </div>
+        <button
+          type="button"
+          class="icon-btn"
+          aria-label="How to play"
+          aria-expanded={showHowTo}
+          onclick={() => (showHowTo = true)}
+        >ⓘ</button>
 
         <div class="top-actions">
-          <div class="toggle" role="group" aria-label="Difficulty">
-            <button
-              type="button"
-              class="toggle-option"
-              class:active={selectedMode === 'easy'}
-              aria-pressed={selectedMode === 'easy'}
-              onclick={() => (selectedMode = 'easy')}
-            >Easy</button>
-            <button
-              type="button"
-              class="toggle-option"
-              class:active={selectedMode === 'hard'}
-              aria-pressed={selectedMode === 'hard'}
-              onclick={() => (selectedMode = 'hard')}
-            >Not so easy</button>
-          </div>
-
           <div class="panel-anchor">
             <button
               type="button"
               class="icon-btn"
               aria-label="Scoreboard"
               aria-expanded={openPanel === 'scoreboard'}
-              onclick={() => togglePanel('scoreboard')}
+              onclick={() => (openPanel = openPanel === 'scoreboard' ? null : 'scoreboard')}
             >🜲</button>
             {#if openPanel === 'scoreboard'}
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <div class="panel-backdrop" role="presentation" onclick={() => (openPanel = null)}></div>
               <div class="panel panel-right" role="dialog" aria-label="Scoreboard">
                 <div class="panel-header">Scoreboard</div>
-                <p class="panel-body">
-                  Weekly top scores. Finish a puzzle to get a random username and join automatically.
-                </p>
+                <p class="panel-body">Weekly top scores.</p>
                 <button
                   type="button"
                   class="panel-link"
@@ -123,11 +108,34 @@
 
         <h3 class="text">Combine icons until <br /> none remain!</h3>
 
+        {#if !playedThisWeek}
+          <div class="username-box">
+            <label for="username">Username</label>
+            <div class="username-row">
+              <input
+                id="username"
+                type="text"
+                maxlength="20"
+                autocomplete="username"
+                placeholder="Choose a name"
+                bind:value={usernameDraft}
+                oninput={() => (usernameError = '')}
+              />
+              <button type="button" class="ghost-btn" onclick={randomName}>Random</button>
+            </div>
+            {#if usernameError}
+              <p class="field-error">{usernameError}</p>
+            {:else}
+              <p class="field-hint">Saved to the weekly scoreboard when you finish.</p>
+            {/if}
+          </div>
+        {/if}
+
         <div class="center">
           <div class="split">
             <button
               type="button"
-              onclick={() => play(selectedMode)}
+              onclick={() => play()}
               class="btn-group btn-primary"
               disabled={playedThisWeek}
             >
@@ -157,6 +165,23 @@
       </footer>
     </div>
   </div>
+
+  {#if showHowTo}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="modal-backdrop" role="presentation" onclick={() => (showHowTo = false)}>
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="How to play"
+        tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+      >
+        <HowToPlay onClose={() => (showHowTo = false)} />
+      </div>
+    </div>
+  {/if}
 </main>
 
 <style>
@@ -244,10 +269,6 @@
     text-align: left;
   }
 
-  .panel-left {
-    left: 0;
-  }
-
   .panel-right {
     right: 0;
   }
@@ -261,27 +282,6 @@
     color: var(--gist-text);
   }
 
-  .steps {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .steps li {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
-
-  .steps strong {
-    font-size: 0.9rem;
-    color: var(--gist-text);
-  }
-
-  .steps span,
   .panel-body {
     margin: 0;
     font-size: 0.85rem;
@@ -326,30 +326,65 @@
     margin-bottom: 1rem;
   }
 
-  .toggle {
-    display: inline-flex;
-    gap: 0.2rem;
-    padding: 0.2rem;
-    background: var(--gist-bg);
-    border: 1px solid var(--gist-border);
-    border-radius: 9px;
+  .username-box {
+    max-width: 340px;
+    margin: 0 auto 0.5rem;
+    text-align: left;
   }
 
-  .toggle-option {
-    border: none;
-    background: transparent;
-    color: #33566b;
-    padding: 0.4rem 0.75rem;
-    min-height: 36px;
-    border-radius: 7px;
-    font-weight: 700;
+  .username-box label {
+    display: block;
     font-size: 0.8rem;
-    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gist-text-muted);
+    margin-bottom: 0.4rem;
   }
 
-  .toggle-option.active {
-    background: linear-gradient(135deg, #a8c5e0, #6f9fc4);
-    color: #fff;
+  .username-row {
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .username-row input {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--gist-border-strong);
+    border-radius: 10px;
+    font-size: 1rem;
+    color: var(--gist-text);
+    background: #fff;
+  }
+
+  .ghost-btn {
+    min-height: 44px;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    border: 1.5px solid var(--gist-border);
+    background: var(--gist-bg);
+    color: var(--gist-text);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .field-hint,
+  .field-error {
+    margin: 0.4rem 0 0;
+    font-size: 0.8rem;
+  }
+
+  .field-hint {
+    color: var(--gist-text-muted);
+  }
+
+  .field-error {
+    color: #c45b5b;
+    font-weight: 600;
   }
 
   .text {
@@ -418,6 +453,27 @@
 
   .footer a:hover {
     text-decoration: underline;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    z-index: 60;
+  }
+
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.25rem 1.25rem 1.5rem;
+    width: min(440px, 100%);
+    margin: 1rem 0;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   }
 
   @media (max-width: 768px) {

@@ -12,6 +12,7 @@ const RESULT_KEY = 'gist_last_result';
  *   points?: number;
  *   username?: string;
  *   weekKey?: string;
+ *   scoreSaved?: boolean;
  *   answers: { word: string; cells: string[]; icons: string[] }[];
  *   fillAnswers?: Record<string, string>;
  *   collectible?: { number: string; word: string } | null;

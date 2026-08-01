@@ -116,6 +116,21 @@ export function addLocalCollectible(collectible) {
   window.localStorage.setItem(COLLECTIBLES_KEY, JSON.stringify(list.slice(0, 50)));
 }
 
+/** Validate username for scoreboard (2–20, safe chars). */
+export function validateUsername(name) {
+  const trimmed = (name || '').trim();
+  if (!trimmed || trimmed.length < 2 || trimmed.length > 20) {
+    return { ok: false, error: 'Username must be 2–20 characters' };
+  }
+  if (!/^[a-zA-Z0-9_\- ]+$/.test(trimmed)) {
+    return {
+      ok: false,
+      error: 'Use letters, numbers, spaces, _ or - only',
+    };
+  }
+  return { ok: true, username: trimmed };
+}
+
 /**
  * Points for the weekly scoreboard (0–100).
  * Win: time + remaining lives. Lose: partial credit for groups solved.

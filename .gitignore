@@ -26,3 +26,5 @@ generated_metadata/
 
 # Local icon crop debug dumps
 myapp/scripts/debug_crops/
+
+myapp/scripts/debug_howto/

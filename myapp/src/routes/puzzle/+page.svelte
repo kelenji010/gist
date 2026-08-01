@@ -32,6 +32,7 @@
     weekKey,
   } from '$lib/player.js';
   import { saveResult, formatTime } from '$lib/resultStore.js';
+  import HowToPlay from '$lib/components/HowToPlay.svelte';
 
   type Phase = 'playing' | 'finished';
 
@@ -45,6 +46,7 @@
   let gameStartMs = $state(0);
   let elapsedSeconds = $state(0);
   let blocked = $state(false);
+  let showHowTo = $state(false);
 
   /** Swipe tracking */
   let swiping = $state(false);
@@ -295,22 +297,16 @@
     markPlayedThisWeek();
     if (collectible) addLocalCollectible(collectible);
 
-    // Persist score + collectible (server enforces one play / username / week)
+    // Persist points + collectible to Supabase (one play / username / week).
+    // If the name is taken this week, result page lets them pick another.
+    let scoreSaved = false;
     try {
-      let res = await fetch('/api/scoreboard', {
+      const res = await fetch('/api/scoreboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, points, weekKey: week, collectible }),
       });
-
-      if (res.status === 409) {
-        username = setUsername(generateUsername());
-        await fetch('/api/scoreboard', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, points, weekKey: week, collectible }),
-        });
-      }
+      scoreSaved = res.ok;
     } catch (err) {
       console.warn('Score save failed', err);
     }
@@ -321,6 +317,7 @@
       points,
       username,
       weekKey: week,
+      scoreSaved,
       answers: [
         ...GROUPS.map((g) => ({
           word: g.word,
@@ -352,7 +349,15 @@
 <main class="page">
   <div class="puzzle-container">
     <header class="header">
-      <h1>Gist</h1>
+      <div class="title-row">
+        <h1>Gist</h1>
+        <button
+          type="button"
+          class="help-btn"
+          aria-label="How to play"
+          onclick={() => (showHowTo = true)}
+        >ⓘ</button>
+      </div>
       <div class="hud">
         <span class="hud-item" title="Lives">
           {#each Array(MAX_LIVES) as _, i}
@@ -458,6 +463,23 @@
       </div>
     </div>
   {/if}
+
+  {#if showHowTo}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="modal-backdrop howto-backdrop" role="presentation" onclick={() => (showHowTo = false)}>
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <div
+        class="modal howto-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="How to play"
+        tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+      >
+        <HowToPlay onClose={() => (showHowTo = false)} />
+      </div>
+    </div>
+  {/if}
 </main>
 {/if}
 
@@ -475,12 +497,34 @@
     padding: 0.5rem 0 1rem;
   }
 
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
   .header h1 {
     margin: 0;
     font-size: 1.75rem;
     font-weight: 700;
     letter-spacing: -0.5px;
     color: var(--gist-text);
+  }
+
+  .help-btn {
+    background: var(--gist-bg);
+    color: #33566b;
+    border: 1px solid var(--gist-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    cursor: pointer;
+  }
+
+  .help-btn:hover {
+    background: #d8e8f3;
   }
 
   .hud {
@@ -633,6 +677,13 @@
     z-index: 50;
   }
 
+  .howto-backdrop {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    z-index: 60;
+  }
+
   .modal {
     background: #fff;
     border-radius: 16px;
@@ -640,6 +691,13 @@
     width: min(400px, 100%);
     text-align: center;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  }
+
+  .howto-modal {
+    width: min(440px, 100%);
+    text-align: left;
+    margin: 1rem 0;
+    padding: 1.25rem 1.25rem 1.5rem;
   }
 
   .modal h2 {
