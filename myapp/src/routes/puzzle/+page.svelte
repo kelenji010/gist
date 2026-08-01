@@ -56,10 +56,10 @@
   let swipeCursorId: string | null = null;
   let activePointerId: number | null = null;
 
-  const solvedWords = $derived(
-    solvedOrder.map((id) => GROUPS.find((g) => g.id === id)?.word ?? id)
+  /** Top strip always mitt → owl → algae (fill in as each is solved). */
+  const slots = $derived(
+    THEME.icons.map((id) => (solvedOrder.includes(id) ? id : null))
   );
-  const slots = $derived([0, 1, 2].map((i) => solvedWords[i] ?? null));
 
   onMount(() => {
     if (hasPlayedThisWeek()) {
