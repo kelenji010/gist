@@ -138,12 +138,21 @@
     });
   }
 
+  /** True if this cell counts toward a soft clue (fill-ins must be the correct icon). */
+  function countsForSoftClue(cellId: string) {
+    const cell = cellById(cellId);
+    if (cell.type === 'fill') return fillAnswers[cellId] === cell.correct;
+    return true;
+  }
+
   /** After submit: which unsolved group has the most overlap with the attempt (need ≥2). */
   function findPartialAttemptHint(selection: string[]) {
     let best: { groupId: string; cellIds: string[] } | null = null;
     for (const group of GROUPS) {
       if (solvedOrder.includes(group.id)) continue;
-      const overlap = selection.filter((id) => group.cells.includes(id));
+      const overlap = selection.filter(
+        (id) => group.cells.includes(id) && countsForSoftClue(id)
+      );
       if (overlap.length < 2) continue;
       if (!best || overlap.length > best.cellIds.length) {
         best = { groupId: group.id, cellIds: overlap };
