@@ -63,6 +63,27 @@ export const HINT_REVEAL_ORDER = ['algae', 'owl', 'mitt'];
 export const MAX_HINTS = 3;
 
 /**
+ * Post-attempt tint when ≥2 tiles in a failed swipe belong to one unsolved group.
+ * rebus (algae) = dark, link 1 (owl) = medium, link 2 (mitt) = light
+ */
+export const GROUP_COLORS = {
+  algae: '#00008B',
+  owl: '#0000CD',
+  mitt: '#ADD8E6',
+};
+
+/** @param {string} cellId */
+export function groupIdForCell(cellId) {
+  const group = GROUPS.find((g) => g.cells.includes(cellId));
+  return group?.id ?? null;
+}
+
+/** @param {string} groupId */
+export function colorForGroup(groupId) {
+  return GROUP_COLORS[groupId] ?? null;
+}
+
+/**
  * Allowed sequences for solving the three groups (by group id).
  * Exact order of the arrays matters; cell order inside a group does not.
  */

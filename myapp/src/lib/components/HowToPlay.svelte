@@ -137,7 +137,10 @@
 
   <section class="step">
     <h3>3. One play per week</h3>
-    <p>Finish to earn a collectible and climb the weekly scoreboard. Points come from speed and lives left.</p>
+    <p>
+      Finish to earn a collectible and climb the weekly scoreboard. Score is based on correct
+      answers without hints (best), answers with hints, and lives lost — not how long you take.
+    </p>
   </section>
 </div>
 

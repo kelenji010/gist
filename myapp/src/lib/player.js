@@ -133,13 +133,24 @@ export function validateUsername(name) {
 
 /**
  * Points for the weekly scoreboard (0–100).
- * Win: time + remaining lives. Lose: partial credit for groups solved.
+ * No time penalty. Based on groups solved clean vs with a hint, minus lives lost.
+ *
+ * - Clean group (solved before that answer was hinted): 34
+ * - Hinted group (top-strip hint revealed it first): 17
+ * - Each life lost: −8
  */
-export function computePoints({ won, elapsedSeconds, livesLeft, groupsSolved }) {
-  if (!won) {
-    return Math.min(30, Math.max(0, (groupsSolved || 0) * 10));
+export function computePoints({
+  solvedGroupIds = [],
+  hintedGroupIds = [],
+  livesLost = 0,
+} = {}) {
+  const hinted = new Set(hintedGroupIds || []);
+  let points = 0;
+
+  for (const id of solvedGroupIds || []) {
+    points += hinted.has(id) ? 17 : 34;
   }
-  const timeScore = Math.max(20, 70 - Math.floor(Math.max(0, elapsedSeconds) / 8));
-  const lifeBonus = Math.max(0, livesLeft) * 10;
-  return Math.min(100, timeScore + lifeBonus);
+
+  points -= Math.max(0, livesLost) * 8;
+  return Math.max(0, Math.min(100, points));
 }

@@ -114,7 +114,7 @@
       <div class="score-box">
         <p class="score-label">Points</p>
         <p class="score-value">{result.points ?? 0}</p>
-        <p class="score-hint">Faster clears and more lives left score higher.</p>
+        <p class="score-hint">More points for clean solves (no hints). Lives lost lower your score. Time doesn’t count.</p>
       </div>
 
       {#if scoreSaved}

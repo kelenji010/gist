@@ -1,18 +1,25 @@
 <script>
   /**
    * Puzzle icon from /static/icons/*.png (user's reference art).
-   * Board uses icons only — set label={true} when you want the word under it.
+   * Optional `tint` recolors black line art via CSS mask.
    */
   import { iconSrc, iconLabel } from '$lib/icons.js';
 
-  let { word = '', size = 48, label = false } = $props();
+  let { word = '', size = 48, label = false, tint = '' } = $props();
 
   const src = $derived(iconSrc(word));
   const text = $derived(iconLabel(word));
 </script>
 
-<span class="icon" style="--size: {size}px">
-  {#if src}
+<span class="icon" style="--size: {size}px; --tint: {tint || 'transparent'}">
+  {#if src && tint}
+    <span
+      class="art tinted"
+      style="mask-image: url('{src}'); -webkit-mask-image: url('{src}');"
+      role="img"
+      aria-hidden="true"
+    ></span>
+  {:else if src}
     <img class="art" src={src} alt="" width={size} height={size} draggable="false" />
   {/if}
   {#if label && text}
@@ -37,6 +44,16 @@
     flex-shrink: 0;
     user-select: none;
     -webkit-user-drag: none;
+  }
+
+  .art.tinted {
+    background-color: var(--tint);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
   }
 
   .word {

@@ -22,6 +22,7 @@
     isSequenceStillValid,
     sameCellSet,
     iconsForGroup,
+    colorForGroup,
   } from '$lib/puzzleBoard.js';
   import {
     hasPlayedThisWeek,
@@ -51,6 +52,13 @@
   let showHowTo = $state(false);
   /** How many top-strip hints used (0–MAX_HINTS). */
   let hintsUsed = $state(0);
+  /** Group ids that were already hinted when the player solved them. */
+  let solvedWithHint = $state<string[]>([]);
+  /**
+   * After a failed 3-tile attempt: tint cells that were partly correct
+   * for one unsolved group (post-submit clue only).
+   */
+  let attemptHint = $state<{ groupId: string; cellIds: string[] } | null>(null);
 
   /** Swipe tracking */
   let swiping = $state(false);
@@ -130,6 +138,24 @@
     });
   }
 
+  /** After submit: which unsolved group has the most overlap with the attempt (need ≥2). */
+  function findPartialAttemptHint(selection: string[]) {
+    let best: { groupId: string; cellIds: string[] } | null = null;
+    for (const group of GROUPS) {
+      if (solvedOrder.includes(group.id)) continue;
+      const overlap = selection.filter((id) => group.cells.includes(id));
+      if (overlap.length < 2) continue;
+      if (!best || overlap.length > best.cellIds.length) {
+        best = { groupId: group.id, cellIds: overlap };
+      }
+    }
+    return best;
+  }
+
+  function clearAttemptHint() {
+    attemptHint = null;
+  }
+
   function tileIdFromPoint(x: number, y: number): string | null {
     const el = document.elementFromPoint(x, y);
     const tile = el?.closest?.('[data-cell-id]') as HTMLElement | null;
@@ -175,6 +201,7 @@
 
   function onTilePointerDown(event: PointerEvent, cellId: string) {
     if (phase !== 'playing' || isSolvedCell(cellId)) return;
+    clearAttemptHint();
 
     const cell = cellById(cellId);
 
@@ -262,14 +289,21 @@
   }
 
   function checkSelection() {
-    const group = matchGroup(selected, solvedOrder, fillAnswers);
+    const attempt = [...selected];
+    const group = matchGroup(attempt, solvedOrder, fillAnswers);
 
     if (!group) {
       const maybe = GROUPS.find(
-        (g) => !solvedOrder.includes(g.id) && sameCellSet(selected, g.cells)
+        (g) => !solvedOrder.includes(g.id) && sameCellSet(attempt, g.cells)
       );
       lives -= 1;
-      feedback = maybe ? 'Check your fill-ins.' : 'Not a match.';
+      // Post-submit clue: tint the tiles that were partly right for a group
+      attemptHint = findPartialAttemptHint(attempt);
+      feedback = maybe
+        ? 'Check your fill-ins.'
+        : attemptHint
+          ? 'Close — those tiles share a link or rebus.'
+          : 'Not a match.';
       selected = [];
       if (lives <= 0) endGame(false);
       return;
@@ -278,10 +312,19 @@
     const nextOrder = [...solvedOrder, group.id];
     if (!isSequenceStillValid(nextOrder)) {
       lives -= 1;
-      feedback = 'Not a match.';
+      attemptHint = findPartialAttemptHint(attempt);
+      feedback = attemptHint
+        ? 'Close — those tiles share a link or rebus.'
+        : 'Not a match.';
       selected = [];
       if (lives <= 0) endGame(false);
       return;
+    }
+
+    clearAttemptHint();
+
+    if (hintedIds.includes(group.id) && !solvedWithHint.includes(group.id)) {
+      solvedWithHint = [...solvedWithHint, group.id];
     }
 
     solvedOrder = nextOrder;
@@ -308,11 +351,11 @@
     elapsedSeconds = elapsed;
 
     let username = ensureUsername();
+    const livesLost = Math.max(0, MAX_LIVES - lives);
     const points = computePoints({
-      won,
-      elapsedSeconds: elapsed,
-      livesLeft: Math.max(0, lives),
-      groupsSolved: solvedOrder.length,
+      solvedGroupIds: solvedOrder,
+      hintedGroupIds: solvedWithHint,
+      livesLost,
     });
     const collectible = won ? COLLECTIBLE : null;
     const week = weekKey();
@@ -439,6 +482,9 @@
         {@const isFill = cell.type === 'fill'}
         {@const isSelected = selected.includes(cell.id)}
         {@const solved = isSolvedCell(cell.id)}
+        {@const inAttemptHint = !!attemptHint?.cellIds.includes(cell.id)}
+        {@const attemptTint =
+          inAttemptHint && attemptHint ? colorForGroup(attemptHint.groupId) : ''}
         {@const selectIndex = selected.indexOf(cell.id)}
         <div
           class="tile"
@@ -446,6 +492,11 @@
           class:solved
           class:empty-fill={!word && isFill}
           class:filled-fill={!!word && isFill}
+          class:attempt-hint={inAttemptHint}
+          class:tint-algae={attemptHint?.groupId === 'algae' && inAttemptHint}
+          class:tint-owl={attemptHint?.groupId === 'owl' && inAttemptHint}
+          class:tint-mitt={attemptHint?.groupId === 'mitt' && inAttemptHint}
+          style={attemptTint ? `--group-tint: ${attemptTint}` : ''}
           data-cell-id={cell.id}
           role="gridcell"
           aria-label={word ? word : `Fill-in ${cell.id}`}
@@ -455,7 +506,7 @@
             <span class="swipe-order">{selectIndex + 1}</span>
           {/if}
           {#if word}
-            <Icon {word} size={56} label={false} />
+            <Icon {word} size={56} label={false} tint={attemptTint || ''} />
           {:else}
             <span class="blank-frame" aria-hidden="true"></span>
           {/if}
@@ -473,10 +524,11 @@
       <Button
         onclick={() => {
           selected = [];
+          clearAttemptHint();
           feedback = '';
         }}
         class="btn-secondary"
-        disabled={selected.length === 0}
+        disabled={selected.length === 0 && !attemptHint}
       >Clear</Button>
       <Button onclick={() => goto('/')} class="btn-secondary">Home</Button>
     </div>
@@ -776,6 +828,24 @@
 
   .tile.solved {
     opacity: 0.4;
+  }
+
+  .tile.attempt-hint {
+    border-color: var(--group-tint, #1a1a1a);
+    background: color-mix(in srgb, var(--group-tint, #fff) 18%, white);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--group-tint, transparent) 40%, white);
+  }
+
+  .tile.tint-algae {
+    --group-tint: #00008b;
+  }
+
+  .tile.tint-owl {
+    --group-tint: #0000cd;
+  }
+
+  .tile.tint-mitt {
+    --group-tint: #add8e6;
   }
 
   .feedback {
