@@ -56,6 +56,13 @@ export const THEME = {
 };
 
 /**
+ * Top-strip hint reveal order (not board tiles).
+ * Hint 1 → algae (rebus), Hint 2 → owl (link), Hint 3 → mitt (link).
+ */
+export const HINT_REVEAL_ORDER = ['algae', 'owl', 'mitt'];
+export const MAX_HINTS = 3;
+
+/**
  * Allowed sequences for solving the three groups (by group id).
  * Exact order of the arrays matters; cell order inside a group does not.
  */

@@ -16,6 +16,8 @@
     THEME,
     COLLECTIBLE,
     MAX_LIVES,
+    HINT_REVEAL_ORDER,
+    MAX_HINTS,
     matchGroup,
     isSequenceStillValid,
     sameCellSet,
@@ -47,6 +49,8 @@
   let elapsedSeconds = $state(0);
   let blocked = $state(false);
   let showHowTo = $state(false);
+  /** How many top-strip hints used (0–MAX_HINTS). */
+  let hintsUsed = $state(0);
 
   /** Swipe tracking */
   let swiping = $state(false);
@@ -56,10 +60,29 @@
   let swipeCursorId: string | null = null;
   let activePointerId: number | null = null;
 
-  /** Top strip always mitt → owl → algae (fill in as each is solved). */
+  const hintedIds = $derived(HINT_REVEAL_ORDER.slice(0, hintsUsed));
+  const hintsLeft = $derived(MAX_HINTS - hintsUsed);
+
+  /** Top strip: mitt → owl → algae. Shown when solved or revealed by hint. */
   const slots = $derived(
-    THEME.icons.map((id) => (solvedOrder.includes(id) ? id : null))
+    THEME.icons.map((id) => {
+      const visible = solvedOrder.includes(id) || hintedIds.includes(id);
+      if (!visible) return { id, word: null, hinted: false, solved: false };
+      return {
+        id,
+        word: id,
+        hinted: hintedIds.includes(id) && !solvedOrder.includes(id),
+        solved: solvedOrder.includes(id),
+      };
+    })
   );
+
+  function useHint() {
+    if (phase !== 'playing' || hintsUsed >= MAX_HINTS) return;
+    hintsUsed += 1;
+    const messages = ['Top rebus revealed', 'Link revealed', 'Link revealed'];
+    feedback = messages[hintsUsed - 1] ?? 'Hint used';
+  }
 
   onMount(() => {
     if (hasPlayedThisWeek()) {
@@ -368,12 +391,17 @@
       </div>
     </header>
 
-    <!-- Top strip: result icons appear as groups are solved (icons only) -->
-    <div class="word-strip" aria-label="Solved words">
-      {#each slots as word, i}
-        <div class="word-slot" class:filled={!!word}>
-          {#if word}
-            <Icon {word} size={44} label={false} />
+    <!-- Top strip: mitt → owl → algae (solved or hinted) -->
+    <div class="word-strip" aria-label="Answer strip">
+      {#each slots as slot, i}
+        <div
+          class="word-slot"
+          class:filled={!!slot.word}
+          class:hinted={slot.hinted}
+          class:solved-slot={slot.solved}
+        >
+          {#if slot.word}
+            <Icon word={slot.word} size={44} label={false} />
           {:else}
             <span class="slot-num">{i + 1}</span>
           {/if}
@@ -381,7 +409,23 @@
       {/each}
     </div>
 
-    <p class="hint">Tap a dashed tile to fill or change it. Swipe across 3 icons to combine them.</p>
+    <div class="hint-row">
+      <p class="play-tip">Tap a dashed tile to fill it. Swipe 3 icons to combine.</p>
+      <button
+        type="button"
+        class="hint-btn"
+        onclick={useHint}
+        disabled={phase !== 'playing' || hintsLeft <= 0}
+        aria-label={hintsLeft > 0 ? `Use hint, ${hintsLeft} left` : 'No hints left'}
+      >
+        <span class="hint-label">Hint</span>
+        <span class="hint-dots" aria-hidden="true">
+          {#each Array(MAX_HINTS) as _, i}
+            <span class="hint-dot" class:used={i < hintsUsed}></span>
+          {/each}
+        </span>
+      </button>
+    </div>
 
     <!-- 3×3 board — icons only -->
     <div
@@ -576,17 +620,97 @@
     background: #fff;
   }
 
+  .word-slot.hinted {
+    border-color: var(--gist-border-strong);
+    border-style: dashed;
+    background: #f4f9fc;
+  }
+
+  .word-slot.solved-slot {
+    border-style: solid;
+    border-color: #1a1a1a;
+    background: #fff;
+  }
+
   .slot-num {
     color: #ccc;
     font-weight: 700;
     font-size: 1.1rem;
   }
 
-  .hint {
-    text-align: center;
-    color: var(--gist-text-muted);
-    font-size: 0.88rem;
+  .hint-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
     margin: 0 0 0.85rem;
+  }
+
+  .play-tip {
+    margin: 0;
+    color: var(--gist-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hint-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    min-height: 40px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--gist-border-strong);
+    background: #fff;
+    color: var(--gist-text);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .hint-btn:hover:not(:disabled) {
+    background: var(--gist-bg);
+  }
+
+  .hint-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .hint-dots {
+    display: inline-flex;
+    gap: 0.28rem;
+  }
+
+  .hint-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--gist-primary);
+    background: transparent;
+  }
+
+  .hint-dot.used {
+    background: var(--gist-primary);
+  }
+
+  @media (max-width: 420px) {
+    .hint-row {
+      flex-wrap: wrap;
+    }
+
+    .play-tip {
+      flex-basis: 100%;
+      order: 2;
+      text-align: center;
+    }
+
+    .hint-btn {
+      margin-left: auto;
+    }
   }
 
   .board {
