@@ -3,11 +3,14 @@
  * Files live in /static/icons/ (served as /icons/...).
  */
 
+/** Bump when icon binaries change so production/CDN caches refresh. */
+const ICON_CACHE = 'v3';
+
 /** @param {string} word */
 export function iconSrc(word) {
   const key = (word || '').toLowerCase().trim().replace(/\s+/g, '-');
   if (!key) return '';
-  return `/icons/${key}.png`;
+  return `/icons/${key}.png?${ICON_CACHE}`;
 }
 
 /** Display label for an icon id. */

@@ -1,7 +1,8 @@
 <script>
   /**
    * Puzzle icon from /static/icons/*.png (user's reference art).
-   * Optional `tint` recolors black line art via CSS mask.
+   * Soft-clue `tint` uses a border wash — not a CSS mask — so colorful
+   * icons (neon, photos) stay visible instead of disappearing.
    */
   import { iconSrc, iconLabel } from '$lib/icons.js';
 
@@ -11,15 +12,12 @@
   const text = $derived(iconLabel(word));
 </script>
 
-<span class="icon" style="--size: {size}px; --tint: {tint || 'transparent'}">
-  {#if src && tint}
-    <span
-      class="art tinted"
-      style="mask-image: url('{src}'); -webkit-mask-image: url('{src}');"
-      role="img"
-      aria-hidden="true"
-    ></span>
-  {:else if src}
+<span
+  class="icon"
+  class:has-tint={!!tint}
+  style="--size: {size}px; --tint: {tint || 'transparent'}"
+>
+  {#if src}
     <img class="art" src={src} alt="" width={size} height={size} draggable="false" />
   {/if}
   {#if label && text}
@@ -46,14 +44,10 @@
     -webkit-user-drag: none;
   }
 
-  .art.tinted {
-    background-color: var(--tint);
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
+  .icon.has-tint .art {
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tint) 70%, transparent);
+    background: color-mix(in srgb, var(--tint) 14%, white);
   }
 
   .word {
