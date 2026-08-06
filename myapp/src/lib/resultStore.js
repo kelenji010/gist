@@ -1,6 +1,7 @@
 /**
  * Save / load the end-of-game result for the /result page.
- * Uses sessionStorage so a refresh of /result still works in the same tab.
+ * Uses localStorage so the answer key + card survive refresh and
+ * returning from the scoreboard in the same browser.
  */
 
 const RESULT_KEY = 'gist_last_result';
@@ -20,14 +21,28 @@ const RESULT_KEY = 'gist_last_result';
  */
 export function saveResult(result) {
   if (typeof window === 'undefined') return;
-  sessionStorage.setItem(RESULT_KEY, JSON.stringify(result));
+  const payload = JSON.stringify(result);
+  try {
+    localStorage.setItem(RESULT_KEY, payload);
+  } catch {
+    /* quota / private mode */
+  }
+  try {
+    sessionStorage.setItem(RESULT_KEY, payload);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function loadResult() {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = sessionStorage.getItem(RESULT_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw = sessionStorage.getItem(RESULT_KEY) || localStorage.getItem(RESULT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (!Array.isArray(parsed.answers)) parsed.answers = [];
+    return parsed;
   } catch {
     return null;
   }

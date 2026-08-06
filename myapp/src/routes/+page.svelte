@@ -13,6 +13,7 @@
     validateUsername,
   } from '$lib/player.js';
   import HowToPlay from '$lib/components/HowToPlay.svelte';
+  import { tap } from '$lib/iosTap.js';
 
   let playedThisWeek = $state(false);
   let username = $state('');
@@ -72,7 +73,9 @@
           class="icon-btn"
           aria-label="How to play"
           aria-expanded={showHowTo}
-          onclick={() => (showHowTo = true)}
+          {...tap(() => {
+            showHowTo = true;
+          })}
         >ⓘ</button>
 
         <div class="top-actions">
@@ -82,18 +85,26 @@
               class="icon-btn"
               aria-label="Scoreboard"
               aria-expanded={openPanel === 'scoreboard'}
-              onclick={() => (openPanel = openPanel === 'scoreboard' ? null : 'scoreboard')}
+              {...tap(() => {
+                openPanel = openPanel === 'scoreboard' ? null : 'scoreboard';
+              })}
             >🜲</button>
             {#if openPanel === 'scoreboard'}
               <!-- svelte-ignore a11y_click_events_have_key_events -->
-              <div class="panel-backdrop" role="presentation" onclick={() => (openPanel = null)}></div>
+              <div
+                class="panel-backdrop"
+                role="presentation"
+                {...tap(() => {
+                  openPanel = null;
+                })}
+              ></div>
               <div class="panel panel-right" role="dialog" aria-label="Scoreboard">
                 <div class="panel-header">Scoreboard</div>
                 <p class="panel-body">Weekly top scores.</p>
                 <button
                   type="button"
                   class="panel-link"
-                  onclick={() => goto('/leaderboard')}
+                  {...tap(() => goto('/leaderboard'))}
                 >Open scoreboard</button>
               </div>
             {/if}
@@ -121,7 +132,7 @@
                 bind:value={usernameDraft}
                 oninput={() => (usernameError = '')}
               />
-              <button type="button" class="ghost-btn" onclick={randomName}>Random</button>
+              <button type="button" class="ghost-btn" {...tap(randomName)}>Random</button>
             </div>
             {#if usernameError}
               <p class="field-error">{usernameError}</p>
@@ -135,13 +146,13 @@
           <div class="split">
             <button
               type="button"
-              onclick={() => play()}
               class="btn-group btn-primary"
               disabled={playedThisWeek}
+              {...(playedThisWeek ? {} : tap(() => play()))}
             >
               {playedThisWeek ? 'Already played' : 'Play Now'}
             </button>
-            <button type="button" onclick={() => goto('/result')} class="btn-group btn-secondary">
+            <button type="button" class="btn-group btn-secondary" {...tap(() => goto('/result'))}>
               Result
             </button>
           </div>
@@ -168,7 +179,13 @@
 
   {#if showHowTo}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <div class="modal-backdrop" role="presentation" onclick={() => (showHowTo = false)}>
+    <div
+      class="modal-backdrop"
+      role="presentation"
+      {...tap(() => {
+        showHowTo = false;
+      })}
+    >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <div
         class="modal"
@@ -177,6 +194,7 @@
         aria-label="How to play"
         tabindex="-1"
         onclick={(e) => e.stopPropagation()}
+        ontouchend={(e) => e.stopPropagation()}
       >
         <HowToPlay onClose={() => (showHowTo = false)} />
       </div>
@@ -246,8 +264,10 @@
     cursor: pointer;
   }
 
-  .icon-btn:hover {
-    background: #d8e8f3;
+  @media (hover: hover) and (pointer: fine) {
+    .icon-btn:hover {
+      background: #d8e8f3;
+    }
   }
 
   .panel-backdrop {
@@ -304,8 +324,10 @@
     cursor: pointer;
   }
 
-  .panel-link:hover {
-    background: #d8e8f3;
+  @media (hover: hover) and (pointer: fine) {
+    .panel-link:hover {
+      background: #d8e8f3;
+    }
   }
 
   .inner-border {

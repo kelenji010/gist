@@ -10,10 +10,13 @@ export function iconSrc(word) {
   return `/icons/${key}.png`;
 }
 
-/** Display label for an icon id (himantes1 / himantes2 → "himantes"). */
+/** Display label for an icon id. */
 export function iconLabel(word) {
   const key = (word || '').toLowerCase().trim();
-  if (key === 'himantes1' || key === 'himantes2') return 'himantes';
+  if (key === 'ferris-wheel') return 'ferris wheel';
+  if (key === 'bumper-car' || key === 'bumper car') return 'bumper car';
+  if (key === 'clown-car' || key === 'clown car') return 'clown car';
+  if (key === 'x-ray') return 'x-ray';
   return word || '';
 }
 

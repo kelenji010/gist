@@ -7,7 +7,6 @@
    * - Board shows icons only (no words)
    */
   import { onMount } from 'svelte';
-  import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
   import Icon from '$lib/components/Icon.svelte';
   import {
@@ -36,6 +35,7 @@
   } from '$lib/player.js';
   import { saveResult, formatTime } from '$lib/resultStore.js';
   import HowToPlay from '$lib/components/HowToPlay.svelte';
+  import { tap } from '$lib/iosTap.js';
 
   type Phase = 'playing' | 'finished';
 
@@ -71,7 +71,7 @@
   const hintedIds = $derived(HINT_REVEAL_ORDER.slice(0, hintsUsed));
   const hintsLeft = $derived(MAX_HINTS - hintsUsed);
 
-  /** Top strip: mitt → owl → algae. Shown when solved or revealed by hint. */
+  /** Top strip: car → knee → bull. Shown when solved or revealed by hint. */
   const slots = $derived(
     THEME.icons.map((id) => {
       const visible = solvedOrder.includes(id) || hintedIds.includes(id);
@@ -264,18 +264,24 @@
     tryAddToSwipe(id);
   }
 
-  function onBoardPointerUp(event: PointerEvent) {
-    if (!swiping || event.pointerId !== activePointerId) return;
-
-    const startId = swipeStartId;
-    const moved = swipeMoved;
-    const path = [...selected];
-
+  function endSwipeTracking() {
     swiping = false;
     swipeMoved = false;
     swipeStartId = null;
     swipeCursorId = null;
     activePointerId = null;
+  }
+
+  function onBoardPointerUp(event: PointerEvent) {
+    if (!swiping) return;
+    // iOS can recycle pointer ids / cancel mid-gesture — still finish the swipe.
+    if (activePointerId != null && event.pointerId !== activePointerId) return;
+
+    const startId = swipeStartId;
+    const moved = swipeMoved;
+    const path = [...selected];
+
+    endSwipeTracking();
 
     // Tap on fill-in (empty or filled) → open picker to set/change icon
     if (startId && !moved) {
@@ -372,19 +378,20 @@
     markPlayedThisWeek();
     if (collectible) addLocalCollectible(collectible);
 
-    // Persist points + collectible to Supabase (one play / username / week).
-    // If the name is taken this week, result page lets them pick another.
-    let scoreSaved = false;
-    try {
-      const res = await fetch('/api/scoreboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, points, weekKey: week, collectible }),
-      });
-      scoreSaved = res.ok;
-    } catch (err) {
-      console.warn('Score save failed', err);
-    }
+    // Save result first so /result always has the card + answer key,
+    // even if the scoreboard request is slow or fails.
+    const answers = [
+      ...GROUPS.map((g) => ({
+        word: g.word,
+        cells: [...g.cells],
+        icons: iconsForGroup(g),
+      })),
+      {
+        word: THEME.word,
+        cells: [],
+        icons: [...THEME.icons],
+      },
+    ];
 
     saveResult({
       won,
@@ -392,27 +399,43 @@
       points,
       username,
       weekKey: week,
-      scoreSaved,
-      answers: [
-        ...GROUPS.map((g) => ({
-          word: g.word,
-          cells: [...g.cells],
-          icons: iconsForGroup(g),
-        })),
-        {
-          word: THEME.word,
-          cells: [],
-          icons: [...THEME.icons],
-        },
-      ],
+      scoreSaved: false,
+      answers,
       fillAnswers: {
-        a1: 'athena',
-        c1: 'himantes1',
+        a1: 'neon',
+        a3: 'horn',
       },
       collectible,
     });
 
     goto('/result');
+
+    // Persist points + collectible to Supabase in the background.
+    try {
+      const res = await fetch('/api/scoreboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, points, weekKey: week, collectible }),
+      });
+      if (res.ok) {
+        saveResult({
+          won,
+          elapsedSeconds: elapsed,
+          points,
+          username,
+          weekKey: week,
+          scoreSaved: true,
+          answers,
+          fillAnswers: {
+            a1: 'neon',
+            a3: 'horn',
+          },
+          collectible,
+        });
+      }
+    } catch (err) {
+      console.warn('Score save failed', err);
+    }
   }
 </script>
 
@@ -430,7 +453,9 @@
           type="button"
           class="help-btn"
           aria-label="How to play"
-          onclick={() => (showHowTo = true)}
+          {...tap(() => {
+            showHowTo = true;
+          })}
         >ⓘ</button>
       </div>
       <div class="hud">
@@ -443,7 +468,7 @@
       </div>
     </header>
 
-    <!-- Top strip: mitt → owl → algae (solved or hinted) -->
+    <!-- Top strip: car → knee → bull (solved or hinted) -->
     <div class="word-strip" aria-label="Answer strip">
       {#each slots as slot, i}
         <div
@@ -466,9 +491,9 @@
       <button
         type="button"
         class="hint-btn"
-        onclick={useHint}
         disabled={phase !== 'playing' || hintsLeft <= 0}
         aria-label={hintsLeft > 0 ? `Use hint, ${hintsLeft} left` : 'No hints left'}
+        {...(phase === 'playing' && hintsLeft > 0 ? tap(useHint) : {})}
       >
         <span class="hint-label">Hint</span>
         <span class="hint-dots" aria-hidden="true">
@@ -502,9 +527,9 @@
           class:empty-fill={!word && isFill}
           class:filled-fill={!!word && isFill}
           class:attempt-hint={inAttemptHint}
-          class:tint-algae={attemptHint?.groupId === 'algae' && inAttemptHint}
-          class:tint-owl={attemptHint?.groupId === 'owl' && inAttemptHint}
-          class:tint-mitt={attemptHint?.groupId === 'mitt' && inAttemptHint}
+          class:tint-knee={attemptHint?.groupId === 'knee' && inAttemptHint}
+          class:tint-car={attemptHint?.groupId === 'car' && inAttemptHint}
+          class:tint-bull={attemptHint?.groupId === 'bull' && inAttemptHint}
           style={attemptTint ? `--group-tint: ${attemptTint}` : ''}
           data-cell-id={cell.id}
           role="gridcell"
@@ -530,23 +555,32 @@
     {/if}
 
     <div class="actions">
-      <Button
-        onclick={() => {
-          selected = [];
-          clearAttemptHint();
-          feedback = '';
-        }}
+      <button
+        type="button"
         class="btn-secondary"
         disabled={selected.length === 0 && !attemptHint}
-      >Clear</Button>
-      <Button onclick={() => goto('/')} class="btn-secondary">Home</Button>
+        {...(selected.length === 0 && !attemptHint
+          ? {}
+          : tap(() => {
+              selected = [];
+              clearAttemptHint();
+              feedback = '';
+            }))}
+      >Clear</button>
+      <button type="button" class="btn-secondary" {...tap(() => goto('/'))}>Home</button>
     </div>
   </div>
 
   {#if openFillId}
     {@const fillCell = cellById(openFillId)}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <div class="modal-backdrop" role="presentation" onclick={() => (openFillId = null)}>
+    <div
+      class="modal-backdrop"
+      role="presentation"
+      {...tap(() => {
+        openFillId = null;
+      })}
+    >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <div
         class="modal"
@@ -555,23 +589,36 @@
         aria-label="Choose an icon"
         tabindex="-1"
         onclick={(e) => e.stopPropagation()}
+        ontouchend={(e) => e.stopPropagation()}
       >
         <h2>Choose one</h2>
         <div class="choices">
           {#each fillCell.options ?? [] as option}
-            <button type="button" class="choice" onclick={() => pickFill(option)}>
+            <button type="button" class="choice" {...tap(() => pickFill(option))}>
               <Icon word={option} size={64} label={false} />
             </button>
           {/each}
         </div>
-        <button type="button" class="modal-close" onclick={() => (openFillId = null)}>Cancel</button>
+        <button
+          type="button"
+          class="modal-close"
+          {...tap(() => {
+            openFillId = null;
+          })}
+        >Cancel</button>
       </div>
     </div>
   {/if}
 
   {#if showHowTo}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <div class="modal-backdrop howto-backdrop" role="presentation" onclick={() => (showHowTo = false)}>
+    <div
+      class="modal-backdrop howto-backdrop"
+      role="presentation"
+      {...tap(() => {
+        showHowTo = false;
+      })}
+    >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <div
         class="modal howto-modal"
@@ -580,6 +627,7 @@
         aria-label="How to play"
         tabindex="-1"
         onclick={(e) => e.stopPropagation()}
+        ontouchend={(e) => e.stopPropagation()}
       >
         <HowToPlay onClose={() => (showHowTo = false)} />
       </div>
@@ -628,8 +676,10 @@
     cursor: pointer;
   }
 
-  .help-btn:hover {
-    background: #d8e8f3;
+  @media (hover: hover) and (pointer: fine) {
+    .help-btn:hover {
+      background: #d8e8f3;
+    }
   }
 
   .hud {
@@ -732,8 +782,14 @@
     cursor: pointer;
   }
 
-  .hint-btn:hover:not(:disabled) {
-    background: var(--gist-bg);
+  @media (hover: hover) and (pointer: fine) {
+    .hint-btn:hover:not(:disabled) {
+      background: var(--gist-bg);
+    }
+
+    .choice:hover {
+      background: #fff;
+    }
   }
 
   .hint-btn:disabled {
@@ -845,15 +901,15 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--group-tint, transparent) 40%, white);
   }
 
-  .tile.tint-algae {
+  .tile.tint-knee {
     --group-tint: #00008b;
   }
 
-  .tile.tint-owl {
+  .tile.tint-car {
     --group-tint: #0000cd;
   }
 
-  .tile.tint-mitt {
+  .tile.tint-bull {
     --group-tint: #add8e6;
   }
 
@@ -921,10 +977,6 @@
     background: #fafafa;
     padding: 0.85rem 0.4rem;
     cursor: pointer;
-  }
-
-  .choice:hover {
-    background: #fff;
   }
 
   .modal-close {

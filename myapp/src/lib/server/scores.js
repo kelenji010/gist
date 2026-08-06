@@ -84,7 +84,33 @@ export async function saveScore({ username, points, weekKey, puzzleId = null }) 
   return data;
 }
 
-/** Top scores for the current (or given) week. */
+/** Latest collectible for each username (by earned_at). */
+async function latestCollectiblesByUsername(usernames) {
+  const supabase = getSupabase();
+  if (!supabase || !usernames?.length) return new Map();
+
+  const { data, error } = await supabase
+    .from('collectibles')
+    .select('username, number, word, week_key, earned_at')
+    .in('username', usernames)
+    .order('earned_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  /** @type {Map<string, { number: string; word: string; weekKey: string }>} */
+  const map = new Map();
+  for (const row of data ?? []) {
+    if (map.has(row.username)) continue;
+    map.set(row.username, {
+      number: row.number,
+      word: row.word,
+      weekKey: row.week_key,
+    });
+  }
+  return map;
+}
+
+/** Top scores for the current (or given) week, including latest collectible. */
 export async function getLeaderboard(limit = 50, weekKey = null) {
   const supabase = getSupabase();
   if (!supabase) return null;
@@ -101,12 +127,17 @@ export async function getLeaderboard(limit = 50, weekKey = null) {
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
+  const collectibleMap = await latestCollectiblesByUsername(
+    (data ?? []).map((row) => row.username)
+  );
+
   return data.map((row) => ({
     id: row.id,
     username: row.username,
     points: row.points,
     weekKey: row.week_key,
     date: new Date(row.created_at).getTime(),
+    collectible: collectibleMap.get(row.username) ?? null,
   }));
 }
 
@@ -124,7 +155,17 @@ export async function saveCollectible({ username, number, word, weekKey }) {
     .eq('number', number)
     .maybeSingle();
 
-  if (existing) return existing;
+  if (existing) {
+    // Keep the card linked to this username; refresh word/week if they re-earn it.
+    const { data, error } = await supabase
+      .from('collectibles')
+      .update({ word, week_key: weekKey, user_id: userId })
+      .eq('id', existing.id)
+      .select('id, username, number, word, week_key')
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  }
 
   const { data, error } = await supabase
     .from('collectibles')
@@ -139,7 +180,15 @@ export async function saveCollectible({ username, number, word, weekKey }) {
     .single();
 
   if (error) {
-    if (error.code === '23505') return null;
+    if (error.code === '23505') {
+      const { data: again } = await supabase
+        .from('collectibles')
+        .select('id, username, number, word, week_key')
+        .eq('username', username)
+        .eq('number', number)
+        .maybeSingle();
+      return again;
+    }
     throw new Error(error.message);
   }
   return data;

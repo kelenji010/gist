@@ -10,6 +10,7 @@ import {
   getLeaderboard,
   saveScore,
   saveCollectible,
+  getCollectibles,
   hasPlayedWeek,
 } from '$lib/server/scores.js';
 
@@ -50,7 +51,14 @@ export async function GET({ url }) {
       const v = validateUsername(checkUser);
       if (v.error) return json({ error: v.error }, { status: 400 });
       const played = await hasPlayedWeek(v.username, week);
-      return json({ username: v.username, weekKey: week, played });
+      const collectibles = await getCollectibles(v.username);
+      return json({
+        username: v.username,
+        weekKey: week,
+        played,
+        collectibles,
+        latestCollectible: collectibles[0] ?? null,
+      });
     }
 
     const entries = await getLeaderboard(MAX_ENTRIES, week);

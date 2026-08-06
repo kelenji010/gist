@@ -4,9 +4,9 @@
    * Weekly scoreboard from GET /api/scoreboard.
    */
   import { onMount } from 'svelte';
-  import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
   import { getUsername, hasPlayedThisWeek } from '$lib/player.js';
+  import { tap } from '$lib/iosTap.js';
 
   interface ScoreEntry {
     id: string;
@@ -14,6 +14,7 @@
     points: number;
     date: number;
     weekKey?: string;
+    collectible?: { number: string; word: string } | null;
   }
 
   let entries = $state<ScoreEntry[]>([]);
@@ -75,7 +76,7 @@
       <div class="status">
         <p>No scores yet this week. Be the first!</p>
         {#if !played}
-          <Button onclick={() => goto('/puzzle')} class="btn-primary">Play Now</Button>
+          <button type="button" class="btn-primary" {...tap(() => goto('/puzzle'))}>Play Now</button>
         {/if}
       </div>
     {:else}
@@ -85,6 +86,7 @@
             <tr>
               <th>#</th>
               <th>Player</th>
+              <th>Card</th>
               <th>Points</th>
               <th>Date</th>
             </tr>
@@ -94,6 +96,13 @@
               <tr class:top-three={i < 3} class:me={entry.username === me}>
                 <td class="rank">{i + 1}</td>
                 <td class="name">{entry.username}</td>
+                <td class="card">
+                  {#if entry.collectible}
+                    <span class="card-chip">#{entry.collectible.number}</span>
+                  {:else}
+                    <span class="muted">—</span>
+                  {/if}
+                </td>
                 <td class="points">{entry.points}</td>
                 <td class="date">{formatDate(entry.date)}</td>
               </tr>
@@ -105,11 +114,11 @@
 
     <div class="actions">
       {#if !played}
-        <Button onclick={() => goto('/puzzle')} class="btn-primary">Play Puzzle</Button>
+        <button type="button" class="btn-primary" {...tap(() => goto('/puzzle'))}>Play Puzzle</button>
       {:else}
-        <Button onclick={() => goto('/result')} class="btn-primary">View Result</Button>
+        <button type="button" class="btn-primary" {...tap(() => goto('/result'))}>View Result</button>
       {/if}
-      <Button onclick={() => goto('/')} class="btn-secondary">Home</Button>
+      <button type="button" class="btn-secondary" {...tap(() => goto('/'))}>Home</button>
     </div>
   </div>
 </main>
@@ -203,6 +212,21 @@
     font-weight: 600;
     color: var(--gist-text);
     word-break: break-word;
+  }
+
+  .card {
+    min-width: 4.5rem;
+  }
+
+  .card-chip {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gist-text);
+    letter-spacing: 0.02em;
+  }
+
+  .muted {
+    color: var(--gist-text-muted);
   }
 
   .points {

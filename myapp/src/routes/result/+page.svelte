@@ -5,17 +5,25 @@
    * Lets players claim/retry scoreboard save with their username.
    */
   import { onMount } from 'svelte';
-  import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
   import Icon from '$lib/components/Icon.svelte';
   import { loadResult, saveResult, formatTime } from '$lib/resultStore.js';
+  import {
+    GROUPS,
+    THEME,
+    COLLECTIBLE,
+    iconsForGroup,
+  } from '$lib/puzzleBoard.js';
   import {
     getUsername,
     setUsername,
     generateUsername,
     validateUsername,
     getLocalCollectibles,
+    addLocalCollectible,
+    hasPlayedThisWeek,
   } from '$lib/player.js';
+  import { tap } from '$lib/iosTap.js';
 
   let result = $state<{
     won: boolean;
@@ -34,11 +42,62 @@
   let saveMessage = $state('');
   let collectibles = $state<{ number: string; word: string }[]>([]);
 
+  function defaultAnswers() {
+    return [
+      ...GROUPS.map((g) => ({
+        word: g.word,
+        cells: [...g.cells],
+        icons: iconsForGroup(g),
+      })),
+      {
+        word: THEME.word,
+        cells: [] as string[],
+        icons: [...THEME.icons],
+      },
+    ];
+  }
+
+  function normalizeResult(raw: typeof result) {
+    if (!raw) return null;
+    const answers =
+      Array.isArray(raw.answers) && raw.answers.length > 0 ? raw.answers : defaultAnswers();
+    const collectible =
+      raw.collectible ?? (raw.won ? COLLECTIBLE : null);
+    return { ...raw, answers, collectible };
+  }
+
   onMount(() => {
-    result = loadResult();
+    result = normalizeResult(loadResult());
+    // If they already played this week but storage was cleared, still show answers.
+    if (!result && hasPlayedThisWeek()) {
+      result = {
+        won: true,
+        elapsedSeconds: 0,
+        points: 0,
+        username: getUsername() || '',
+        scoreSaved: false,
+        answers: defaultAnswers(),
+        collectible: COLLECTIBLE,
+      };
+      saveResult(result);
+    }
     usernameDraft = result?.username || getUsername() || '';
     scoreSaved = !!result?.scoreSaved;
     collectibles = getLocalCollectibles();
+
+    // Puzzle page may finish the scoreboard POST after navigation.
+    const poll = setInterval(() => {
+      const latest = normalizeResult(loadResult());
+      if (!latest) return;
+      if (latest.scoreSaved && !scoreSaved) {
+        scoreSaved = true;
+        result = latest;
+        usernameDraft = latest.username || usernameDraft;
+        collectibles = getLocalCollectibles();
+      }
+    }, 400);
+
+    return () => clearInterval(poll);
   });
 
   function randomName() {
@@ -83,6 +142,18 @@
         return;
       }
 
+      // Persist the earned collectible under this username (local + server).
+      if (result.collectible) {
+        addLocalCollectible(result.collectible);
+      }
+      if (data.collectible?.number) {
+        addLocalCollectible({
+          number: data.collectible.number,
+          word: data.collectible.word,
+        });
+      }
+      collectibles = getLocalCollectibles();
+
       scoreSaved = true;
       saveMessage = `Saved ${result.points ?? 0} points as ${username}`;
       const next = { ...result, username, scoreSaved: true };
@@ -96,15 +167,15 @@
   }
 </script>
 
-<main class="page page-center">
+<main class="page result-page">
   <div class="result-wrap">
     {#if !result}
       <div class="panel">
         <h1>No result yet</h1>
         <p class="sub">Play this week’s puzzle first.</p>
         <div class="actions">
-          <Button onclick={() => goto('/puzzle')} class="btn-primary">Play</Button>
-          <Button onclick={() => goto('/')} class="btn-secondary">Home</Button>
+          <button type="button" class="btn-primary" {...tap(() => goto('/puzzle'))}>Play</button>
+          <button type="button" class="btn-secondary" {...tap(() => goto('/'))}>Home</button>
         </div>
       </div>
     {:else}
@@ -137,14 +208,19 @@
               bind:value={usernameDraft}
               oninput={() => (usernameError = '')}
             />
-            <button type="button" class="ghost-btn" onclick={randomName}>Random</button>
+            <button type="button" class="ghost-btn" {...tap(randomName)}>Random</button>
           </div>
           {#if usernameError}
             <p class="field-error">{usernameError}</p>
           {/if}
-          <Button onclick={submitScore} class="btn-primary save-btn" disabled={saving}>
+          <button
+            type="button"
+            class="btn-primary save-btn"
+            disabled={saving}
+            {...(saving ? {} : tap(submitScore))}
+          >
             {saving ? 'Saving…' : 'Save score'}
-          </Button>
+          </button>
         </div>
       {/if}
 
@@ -160,7 +236,7 @@
         </div>
       {/if}
 
-      {#if collectibles.length > 1}
+      {#if collectibles.length > 0}
         <div class="collection">
           <h2>Your collectibles</h2>
           <div class="collection-row">
@@ -176,10 +252,10 @@
 
       <div class="answers">
         <h2>Answers</h2>
-        {#each result.answers as answer}
-          <div class="answer-row" class:theme-row={answer.word === 'mythology'}>
+        {#each result.answers ?? [] as answer}
+          <div class="answer-row" class:theme-row={answer.word === 'carnival'}>
             <div class="answer-result">
-              {#if answer.word === 'mythology'}
+              {#if answer.word === 'carnival'}
                 <span class="theme-word">{answer.word}</span>
               {:else}
                 <Icon word={answer.word} size={48} label={true} />
@@ -187,7 +263,7 @@
             </div>
             <span class="eq">=</span>
             <div class="answer-parts">
-              {#each answer.icons as icon, i}
+              {#each answer.icons ?? [] as icon, i}
                 {#if i > 0}<span class="plus">+</span>{/if}
                 <Icon word={icon} size={40} label={true} />
               {/each}
@@ -197,17 +273,25 @@
       </div>
 
       <div class="actions">
-        <Button onclick={() => goto('/leaderboard')} class="btn-primary">Scoreboard</Button>
-        <Button onclick={() => goto('/')} class="btn-secondary">Home</Button>
+        <button type="button" class="btn-primary" {...tap(() => goto('/leaderboard'))}>Scoreboard</button>
+        <button type="button" class="btn-secondary" {...tap(() => goto('/'))}>Home</button>
       </div>
     {/if}
   </div>
 </main>
 
 <style>
+  /* Avoid flex vertical-centering clipping tall result content. */
+  :global(main.result-page) {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
   .result-wrap {
     width: min(480px, 100%);
     text-align: center;
+    padding-bottom: 2rem;
   }
 
   .title {

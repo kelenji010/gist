@@ -3,6 +3,8 @@
    * How to Play — shared directions with demos.
    * Link/rebus examples use non-puzzle art from /howto/.
    */
+  import { tap } from '$lib/iosTap.js';
+
   let { onClose = undefined } = $props();
 
   const linkParts = [
@@ -18,13 +20,19 @@
     { src: '/howto/gun.png', label: 'gun' },
   ];
   const rebusResult = { src: '/howto/cardigan.png', label: 'cardigan' };
+
+  const wordplayParts = [
+    { src: '/howto/letter-i.png', label: 'I' },
+    { src: '/howto/scream.png', label: 'scream' },
+  ];
+  const wordplayResult = { src: '/howto/ice-cream.png', label: 'ice cream' };
 </script>
 
 <div class="howto">
   <div class="howto-top">
     <h2>How to Play</h2>
     {#if onClose}
-      <button type="button" class="close" aria-label="Close" onclick={onClose}>×</button>
+      <button type="button" class="close" aria-label="Close" {...tap(onClose)}>×</button>
     {/if}
   </div>
 
@@ -37,8 +45,9 @@
     <ul class="board-facts">
       <li><strong>Fill-ins</strong> — dashed tiles you complete by picking an icon.</li>
       <li>
-        <strong>Rebuses</strong> — sounds stack into a new word. One rebus result always sits
-        in the <strong>top strip</strong>; the other rebus is found on the puzzle board.
+        <strong>Rebuses</strong> — icons that build a new word: sounds may stack, or there may
+        be a play on words. One rebus result always sits in the <strong>top strip</strong>; the
+        other rebus is found on the puzzle board.
       </li>
       <li><strong>Links</strong> — three icons that belong to the same idea or category.</li>
     </ul>
@@ -115,7 +124,7 @@
       </div>
 
       <div class="example">
-        <p class="caption">Rebus</p>
+        <p class="caption">Rebus — sound stack</p>
         <div class="example-row">
           {#each rebusParts as part, i}
             {#if i > 0}<span class="plus">+</span>{/if}
@@ -131,6 +140,28 @@
           </span>
         </div>
         <p class="example-note">Sounds stack into a new word (car + tea + gun → cardigan).</p>
+      </div>
+
+      <div class="example">
+        <p class="caption">Rebus — play on words</p>
+        <div class="example-row">
+          {#each wordplayParts as part, i}
+            {#if i > 0}<span class="plus">+</span>{/if}
+            <span class="ex-icon">
+              <img src={part.src} alt="" />
+              <span class="ex-label">{part.label}</span>
+            </span>
+          {/each}
+          <span class="eq">=</span>
+          <span class="ex-icon">
+            <img src={wordplayResult.src} alt="" />
+            <span class="ex-label">{wordplayResult.label}</span>
+          </span>
+        </div>
+        <p class="example-note">
+          Homophones and wordplay count too (I + scream → ice cream). Watch for minus signs and
+          other operators on the board.
+        </p>
       </div>
     </div>
   </section>

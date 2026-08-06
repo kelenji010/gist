@@ -47,6 +47,35 @@ textarea {
   font: inherit;
 }
 
+/*
+  iOS Safari: clicks/taps fail or need a second tap when hover styles or
+  missing cursor/touch-action make the first tap count as "hover" only.
+*/
+button,
+a,
+[role='button'],
+.icon-btn,
+.help-btn,
+.hint-btn,
+.ghost-btn,
+.panel-link,
+.btn-primary,
+.btn-secondary,
+.btn-group,
+.choice,
+.modal-close,
+.modal-backdrop {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(94, 143, 182, 0.25);
+}
+
+button:disabled,
+.btn-primary:disabled,
+.btn-group:disabled {
+  cursor: not-allowed;
+}
+
 /* Full-page wrapper used by most screens */
 .page {
   width: 100%;

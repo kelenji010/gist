@@ -1,5 +1,5 @@
 /**
- * Puzzle Board 3 — Greek mythology theme
+ * Puzzle Board 4 — Carnival theme
  *
  * Coordinate system (letter = column, number = row, row 1 at top):
  *   a1 b1 c1
@@ -7,21 +7,22 @@
  *   a3 b3 c3
  *
  * Visual board:
- *   [fill-in]  awl   [fill-in]
- *   hand       jay   himantes2
- *   wisdom  eye chart  eye
+ *   [fill neon]  bumper car    minus
+ *   roller coaster  clown car  on
+ *   [fill horn]  red cape   bullseye target
  *
  * Groups (order inside each group does not matter):
- *   himantes1 + himantes2 + hand = mitt   → [c1,c2,a2]
- *   athena + wisdom + eye = owl           → [a1,a3,c3]
- *   awl + jay + eye chart = algae         → [b1,b2,b3]
+ *   bumper car + clown car + roller coaster = car → [b1,b2,a2]
+ *   neon + minus + on = knee                  → [a1,c1,c2]  (play-on-words rebus)
+ *   horn + red cape + bullseye target = bull  → [a3,b3,c3]
  *
  * Theme (shown on results):
- *   mitt + owl + algae = mythology
+ *   car + knee + bull = carnival
  *
- * Valid solve sequences (exact order of groups):
- *   algae → mitt → owl
- *   algae → owl → mitt
+ * Valid solve sequences (knee needs car solved first to path through b1):
+ *   car → knee → bull
+ *   car → bull → knee
+ *   bull → car → knee
  */
 
 /** @typedef {{ id: string; type: 'fixed'|'fill'; word?: string; options?: string[]; correct?: string }} Cell */
@@ -29,47 +30,47 @@
 /** @type {Cell[]} */
 export const BOARD = [
   // row 1
-  { id: 'a1', type: 'fill', options: ['athena', 'hera', 'aphrodite'], correct: 'athena' },
-  { id: 'b1', type: 'fixed', word: 'awl' },
-  { id: 'c1', type: 'fill', options: ['himantes1', 'helmet', 'mittens'], correct: 'himantes1' },
+  { id: 'a1', type: 'fill', options: ['neon', 'x-ray', 'lamp'], correct: 'neon' },
+  { id: 'b1', type: 'fixed', word: 'bumper car' },
+  { id: 'c1', type: 'fixed', word: 'minus' },
   // row 2
-  { id: 'a2', type: 'fixed', word: 'hand' },
-  { id: 'b2', type: 'fixed', word: 'jay' },
-  { id: 'c2', type: 'fixed', word: 'himantes2' },
+  { id: 'a2', type: 'fixed', word: 'roller coaster' },
+  { id: 'b2', type: 'fixed', word: 'clown car' },
+  { id: 'c2', type: 'fixed', word: 'on' },
   // row 3
-  { id: 'a3', type: 'fixed', word: 'wisdom' },
-  { id: 'b3', type: 'fixed', word: 'eye chart' },
-  { id: 'c3', type: 'fixed', word: 'eye' },
+  { id: 'a3', type: 'fill', options: ['horn', 'tusk', 'fingernail'], correct: 'horn' },
+  { id: 'b3', type: 'fixed', word: 'red cape' },
+  { id: 'c3', type: 'fixed', word: 'bullseye target' },
 ];
 
 /** Answer groups — cell ids, order inside a group does not matter. */
 export const GROUPS = [
-  { id: 'mitt', word: 'mitt', cells: ['c1', 'c2', 'a2'] },
-  { id: 'owl', word: 'owl', cells: ['a1', 'a3', 'c3'] },
-  { id: 'algae', word: 'algae', cells: ['b1', 'b2', 'b3'] },
+  { id: 'car', word: 'car', cells: ['b1', 'b2', 'a2'] },
+  { id: 'knee', word: 'knee', cells: ['a1', 'c1', 'c2'] },
+  { id: 'bull', word: 'bull', cells: ['a3', 'b3', 'c3'] },
 ];
 
-/** Final theme shown on results: mitt + owl + algae = mythology */
+/** Final theme shown on results: car + knee + bull = carnival */
 export const THEME = {
-  word: 'mythology',
-  icons: ['mitt', 'owl', 'algae'],
+  word: 'carnival',
+  icons: ['car', 'knee', 'bull'],
 };
 
 /**
  * Top-strip hint reveal order (not board tiles).
- * Hint 1 → algae (rebus), Hint 2 → owl (link), Hint 3 → mitt (link).
+ * Hint 1 → knee (board rebus), Hint 2 → car (link), Hint 3 → bull (link).
  */
-export const HINT_REVEAL_ORDER = ['algae', 'owl', 'mitt'];
+export const HINT_REVEAL_ORDER = ['knee', 'car', 'bull'];
 export const MAX_HINTS = 3;
 
 /**
  * Post-attempt tint when ≥2 tiles in a failed swipe belong to one unsolved group.
- * rebus (algae) = dark, link 1 (owl) = medium, link 2 (mitt) = light
+ * rebus (knee) = dark, link 1 (car) = medium, link 2 (bull) = light
  */
 export const GROUP_COLORS = {
-  algae: '#00008B',
-  owl: '#0000CD',
-  mitt: '#ADD8E6',
+  knee: '#00008B',
+  car: '#0000CD',
+  bull: '#ADD8E6',
 };
 
 /** @param {string} cellId */
@@ -86,15 +87,17 @@ export function colorForGroup(groupId) {
 /**
  * Allowed sequences for solving the three groups (by group id).
  * Exact order of the arrays matters; cell order inside a group does not.
+ * Knee is not orthogonally connected until car (b1) is solved and pathable.
  */
 export const VALID_SEQUENCES = [
-  ['algae', 'mitt', 'owl'],
-  ['algae', 'owl', 'mitt'],
+  ['car', 'knee', 'bull'],
+  ['car', 'bull', 'knee'],
+  ['bull', 'car', 'knee'],
 ];
 
 export const COLLECTIBLE = {
-  number: '001',
-  word: 'owl',
+  number: '002',
+  word: 'ferris-wheel',
 };
 
 export const MAX_LIVES = 3;
@@ -131,7 +134,6 @@ export function matchGroup(selectedIds, solvedGroupIds, fillAnswers) {
 /**
  * After a correct group is solved, check that the sequence of solved groups
  * so far is still a prefix of at least one valid sequence.
- * (Both valid sequences start with algae.)
  */
 export function isSequenceStillValid(solvedOrder) {
   return VALID_SEQUENCES.some((seq) =>
