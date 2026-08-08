@@ -191,6 +191,37 @@
     return isSolvedCell(cellId);
   }
 
+  /**
+   * Can we walk from → to using only orthogonal steps, optionally through solved tiles?
+   * Blocks diagonal jumps even if the finger skips across a corner.
+   */
+  function canReachOrthogonally(fromId: string, toId: string) {
+    if (fromId === toId) return true;
+    if (isOrthogonalNeighbors(fromId, toId)) return true;
+
+    const queue = [fromId];
+    const seen = new Set([fromId]);
+    while (queue.length) {
+      const cur = queue.shift()!;
+      for (const cell of BOARD) {
+        const id = cell.id;
+        if (seen.has(id) || !isOrthogonalNeighbors(cur, id)) continue;
+        if (id === toId) return true;
+        if (!canPathThrough(id)) continue;
+        seen.add(id);
+        queue.push(id);
+      }
+    }
+    return false;
+  }
+
+  function isOrthogonalSelection(path: string[]) {
+    for (let i = 1; i < path.length; i++) {
+      if (!canReachOrthogonally(path[i - 1], path[i])) return false;
+    }
+    return true;
+  }
+
   function tryAddToSwipe(cellId: string) {
     if (!cellId || isSolvedCell(cellId)) return;
     if (!displayWord(cellId)) return;
@@ -205,6 +236,11 @@
     }
 
     if (selected.length >= 3) return;
+
+    // Must be edge-adjacent to the last selected tile (or via solved path-through).
+    const last = selected[selected.length - 1];
+    if (last && !canReachOrthogonally(last, cellId)) return;
+
     selected = [...selected, cellId];
   }
 
@@ -250,8 +286,17 @@
     if (id !== swipeStartId) swipeMoved = true;
     if (id === swipeCursorId) return;
 
-    // Only step to an edge-neighbor (no diagonals)
+    // Only step to an edge-neighbor of the current cursor (no diagonals / corner cuts)
     if (swipeCursorId && !isOrthogonalNeighbors(swipeCursorId, id)) return;
+
+    // Also block selecting a tile that would make the chosen path diagonal
+    if (
+      selected.length > 0 &&
+      !canPathThrough(id) &&
+      !canReachOrthogonally(selected[selected.length - 1], id)
+    ) {
+      return;
+    }
 
     swipeCursorId = id;
 
@@ -293,11 +338,11 @@
       }
     }
 
-    if (path.length === 3) {
+    if (path.length === 3 && isOrthogonalSelection(path)) {
       selected = path;
       checkSelection();
     } else {
-      // Fewer than 3 (including swipe-back cancel) — clear quietly
+      // Fewer than 3, or a diagonal/disconnected path — clear quietly
       selected = [];
       if (moved && path.length > 0) feedback = '';
     }

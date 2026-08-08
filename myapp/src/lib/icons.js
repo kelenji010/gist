@@ -4,7 +4,7 @@
  */
 
 /** Bump when icon binaries change so production/CDN caches refresh. */
-const ICON_CACHE = 'v3';
+const ICON_CACHE = 'v5';
 
 /** @param {string} word */
 export function iconSrc(word) {
