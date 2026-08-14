@@ -16,7 +16,7 @@ const EMOJI_ICONS = {
   addition: '+',
   hundred: '💯',
   tree: '🌳',
-  swing: '🛝',
+  slide: '🛝',
 };
 
 /** @param {string} word */

@@ -9,12 +9,12 @@
  * Visual board:
  *   dollar        rolled cash   [fill divide]
  *   tree          [fill RR]     kaiser roll
- *   swing         bench         hundred
+ *   slide         bench         hundred
  *
  * Groups (order inside each group does not matter):
  *   dollar + divide + hundred = cent                  → [a1,c1,c3]  (board rebus)
  *   rolled cash + rolls-royce + kaiser roll = roll  → [b1,b2,c2]
- *   tree + swing + bench = park                       → [a2,a3,b3]
+ *   tree + slide + bench = park                       → [a2,a3,b3]
  *
  * Theme (shown on results):
  *   cent + roll + park = central park
@@ -48,7 +48,7 @@ export const BOARD = [
   },
   { id: 'c2', type: 'fixed', word: 'kaiser roll' },
   // row 3
-  { id: 'a3', type: 'fixed', word: 'swing' },
+  { id: 'a3', type: 'fixed', word: 'slide' },
   { id: 'b3', type: 'fixed', word: 'bench' },
   { id: 'c3', type: 'fixed', word: 'hundred' },
 ];
