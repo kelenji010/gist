@@ -10,15 +10,16 @@ npm install
 npm run dev
 ```
 
-Copy `myapp/.env.example` → `myapp/.env` and add your Supabase keys.
-Then run the SQL in `myapp/supabase/schema.sql` (or `weekly_scores_collectibles.sql`) in the Supabase SQL editor.
+The scoreboard uses this project's public Supabase anon key by default.
+To point at a different project, copy `myapp/.env.example` → `myapp/.env`.
+Run `myapp/supabase/schema.sql` in the Supabase SQL editor if tables are missing.
 
 ## Deploy (Render)
 
 - Root directory: `myapp`
 - Build: `npm install && npm run build`
 - Start: `node build`
-- Env: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `NODE_VERSION=20`
+- Env: `NODE_VERSION=20` (Supabase URL + anon key are set in `render.yaml`)
 
 ## How it works
 

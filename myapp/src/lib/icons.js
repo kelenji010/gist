@@ -4,7 +4,7 @@
  */
 
 /** Bump when icon binaries change so production/CDN caches refresh. */
-const ICON_CACHE = 'v6';
+const ICON_CACHE = 'v8';
 
 /** Emoji glyphs keyed by normalized icon id. */
 const EMOJI_ICONS = {
@@ -35,6 +35,7 @@ export function iconSrc(word) {
   if (iconEmoji(word)) return '';
   const key = iconKey(word);
   if (!key) return '';
+  if (key === 'picnic') return `/icons/central-park.png?${ICON_CACHE}`;
   return `/icons/${key}.png?${ICON_CACHE}`;
 }
 
@@ -45,6 +46,7 @@ export function iconLabel(word) {
   if (key === 'rolled-cash') return 'rolled cash';
   if (key === 'rolls-royce') return 'rolls-royce';
   if (key === 'kaiser-roll') return 'kaiser roll';
+  if (key === 'central-park' || key === 'picnic') return 'central park';
   if (key === 'x-ray') return 'x-ray';
   return word || '';
 }

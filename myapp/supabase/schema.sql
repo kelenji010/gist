@@ -41,3 +41,54 @@ create unique index if not exists collectibles_username_number_uidx
 
 create index if not exists collectibles_username_idx
   on public.collectibles (username);
+
+alter table public.users enable row level security;
+alter table public.scores enable row level security;
+alter table public.collectibles enable row level security;
+
+drop policy if exists "Public read users" on public.users;
+create policy "Public read users"
+  on public.users for select
+  using (true);
+
+drop policy if exists "Public insert users" on public.users;
+create policy "Public insert users"
+  on public.users for insert
+  with check (true);
+
+drop policy if exists "Public read scores" on public.scores;
+create policy "Public read scores"
+  on public.scores for select
+  using (true);
+
+drop policy if exists "Public insert scores" on public.scores;
+create policy "Public insert scores"
+  on public.scores for insert
+  with check ((points >= 0) and (points <= 100));
+
+drop policy if exists "Public update scores" on public.scores;
+create policy "Public update scores"
+  on public.scores for update
+  using (true)
+  with check ((points >= 0) and (points <= 100));
+
+drop policy if exists "Public read collectibles" on public.collectibles;
+create policy "Public read collectibles"
+  on public.collectibles for select
+  using (true);
+
+drop policy if exists "Public insert collectibles" on public.collectibles;
+create policy "Public insert collectibles"
+  on public.collectibles for insert
+  with check (true);
+
+drop policy if exists "Public update collectibles" on public.collectibles;
+create policy "Public update collectibles"
+  on public.collectibles for update
+  using (true)
+  with check (true);
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update on table public.users to anon, authenticated;
+grant select, insert, update on table public.scores to anon, authenticated;
+grant select, insert, update on table public.collectibles to anon, authenticated;
