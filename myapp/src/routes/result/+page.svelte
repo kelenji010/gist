@@ -252,6 +252,18 @@
 
       <div class="answers">
         <h2>Answers</h2>
+        <div class="answer-row theme-row">
+          <div class="answer-result">
+            <span class="theme-word">central park</span>
+          </div>
+          <span class="eq">=</span>
+          <div class="answer-parts">
+            {#each ['cent', 'roll', 'park'] as icon, i}
+              {#if i > 0}<span class="plus">+</span>{/if}
+              <Icon word={icon} size={40} label={true} />
+            {/each}
+          </div>
+        </div>
         {#each GROUPS as group}
           <div class="answer-row">
             <div class="answer-result">
@@ -266,18 +278,6 @@
             </div>
           </div>
         {/each}
-        <div class="answer-row theme-row">
-          <div class="answer-result">
-            <span class="theme-word">{THEME.word}</span>
-          </div>
-          <span class="eq">=</span>
-          <div class="answer-parts">
-            {#each THEME.icons as icon, i}
-              {#if i > 0}<span class="plus">+</span>{/if}
-              <Icon word={icon} size={40} label={true} />
-            {/each}
-          </div>
-        </div>
       </div>
 
       <div class="actions">
@@ -525,23 +525,24 @@
   }
 
   .theme-row {
-    margin-top: 0.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--gist-border);
-    border-bottom: none;
+    margin-bottom: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gist-border);
+    border-top: none;
   }
 
   .theme-row .answer-result {
-    min-width: 6.5rem;
+    min-width: 7.5rem;
   }
 
   .theme-word {
     display: block;
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
     text-transform: lowercase;
-    color: var(--gist-text);
+    color: #1a1a1a;
     line-height: 1.2;
+    white-space: nowrap;
   }
 </style>
