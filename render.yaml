@@ -1,7 +1,7 @@
 # Render Blueprint — weekly Gist puzzle
 # Dashboard: https://dashboard.render.com/web/srv-d7qbt6n7f7vs73csods0
 #
-# Set these env vars in the Render service:
+# Set these env vars in the Render service (also inlined below so deploys work):
 #   SUPABASE_URL
 #   SUPABASE_PUBLISHABLE_KEY
 
@@ -17,6 +17,6 @@ services:
       - key: NODE_VERSION
         value: "20"
       - key: SUPABASE_URL
-        sync: false
+        value: https://upyoyxodnrhqbvpxuane.supabase.co
       - key: SUPABASE_PUBLISHABLE_KEY
-        sync: false
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVweW95eG9kbnJocWJ2cHh1YW5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0OTU0MjgsImV4cCI6MjA5NzA3MTQyOH0.0eZ_1BGvFoaZfuRUKzAEnZRtXfSEUPdpWh7O4JG_ZpU

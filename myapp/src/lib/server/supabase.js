@@ -1,39 +1,47 @@
 /**
  * supabase.js — one shared database client for server code.
  *
- * Needs these env vars in myapp/.env:
- *   SUPABASE_URL=https://xxxx.supabase.co
- *   SUPABASE_PUBLISHABLE_KEY=your-key
- *
- * If they are missing, getSupabase() returns null and APIs return 503.
+ * Prefers env vars (SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY / SUPABASE_ANON_KEY).
+ * Falls back to this project's public anon credentials so the scoreboard works
+ * on Render and in production builds, where `.env` is not loaded.
+ * The anon key is safe to ship; table access is controlled by RLS.
  */
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
 
-/** @type {import('@supabase/supabase-js').SupabaseClient | null} */
-let client = null;
+const FALLBACK_URL = 'https://upyoyxodnrhqbvpxuane.supabase.co';
+const FALLBACK_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVweW95eG9kbnJocWJ2cHh1YW5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0OTU0MjgsImV4cCI6MjA5NzA3MTQyOH0.0eZ_1BGvFoaZfuRUKzAEnZRtXfSEUPdpWh7O4JG_ZpU';
 
-function readEnv(name) {
-  return env[name]?.trim() || process.env[name]?.trim() || '';
+function pick(value, fallback) {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  if (!trimmed) return fallback;
+  if (trimmed.includes('YOUR_PROJECT_REF') || trimmed.includes('your-project-ref')) return fallback;
+  if (trimmed.includes('your-supabase-publishable-key')) return fallback;
+  return trimmed;
 }
 
 function supabaseUrl() {
-  return readEnv('SUPABASE_URL');
+  return pick(env.SUPABASE_URL || process.env.SUPABASE_URL, FALLBACK_URL);
 }
 
 function supabaseKey() {
-  return readEnv('SUPABASE_PUBLISHABLE_KEY') || readEnv('SUPABASE_ANON_KEY');
+  return pick(
+    env.SUPABASE_PUBLISHABLE_KEY ||
+      env.SUPABASE_ANON_KEY ||
+      process.env.SUPABASE_PUBLISHABLE_KEY ||
+      process.env.SUPABASE_ANON_KEY,
+    FALLBACK_KEY
+  );
 }
+
+/** @type {import('@supabase/supabase-js').SupabaseClient | null} */
+let client = null;
 
 export function isSupabaseConfigured() {
   const url = supabaseUrl();
   const key = supabaseKey();
-
-  if (!url || !key) return false;
-  if (url.includes('YOUR_PROJECT_REF') || url.includes('your-project-ref')) return false;
-  if (!url.startsWith('https://') || !url.includes('.supabase.co')) return false;
-
-  return true;
+  return Boolean(url && key && url.startsWith('https://') && url.includes('.supabase.co'));
 }
 
 export function getSupabase() {

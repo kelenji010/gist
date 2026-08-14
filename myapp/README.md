@@ -50,11 +50,13 @@ myapp/
 
 ## Supabase setup (scores)
 
-1. Create a project at https://supabase.com
-2. Copy `.env.example` → `.env` and paste your URL + key
-3. Run `supabase/schema.sql` in the Supabase SQL editor
+The scoreboard ships with this project's public anon key, so it works without a local `.env`.
 
-Without `.env`, the site still runs — only the scoreboard API will fail until Supabase is configured.
+To use a different project:
+
+1. Copy `.env.example` → `.env` and paste your URL + key
+2. Run `supabase/schema.sql` in the Supabase SQL editor
+
 
 ## Tips
 
