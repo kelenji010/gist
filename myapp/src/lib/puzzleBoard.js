@@ -12,8 +12,8 @@
  *   swing         bench         hundred
  *
  * Groups (order inside each group does not matter):
- *   rolled cash + rolls-royce + kaiser roll = roll  → [b1,b2,c2]
  *   dollar + divide + hundred = cent                  → [a1,c1,c3]  (board rebus)
+ *   rolled cash + rolls-royce + kaiser roll = roll  → [b1,b2,c2]
  *   tree + swing + bench = park                       → [a2,a3,b3]
  *
  * Theme (shown on results):
@@ -55,8 +55,8 @@ export const BOARD = [
 
 /** Answer groups — cell ids, order inside a group does not matter. */
 export const GROUPS = [
-  { id: 'roll', word: 'roll', cells: ['b1', 'b2', 'c2'] },
   { id: 'cent', word: 'cent', cells: ['a1', 'c1', 'c3'] },
+  { id: 'roll', word: 'roll', cells: ['b1', 'b2', 'c2'] },
   { id: 'park', word: 'park', cells: ['a2', 'a3', 'b3'] },
 ];
 
@@ -106,7 +106,7 @@ export const VALID_SEQUENCES = [
 
 export const COLLECTIBLE = {
   number: '003',
-  word: 'park',
+  word: 'central park',
 };
 
 export const MAX_LIVES = 3;

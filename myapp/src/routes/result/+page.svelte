@@ -61,8 +61,7 @@
     if (!raw) return null;
     // Always use the current answer key so a stale saved result
     // (e.g. picnic) cannot keep showing the old theme.
-    const collectible =
-      raw.collectible ?? (raw.won ? COLLECTIBLE : null);
+    const collectible = raw.won ? COLLECTIBLE : (raw.collectible ?? null);
     return { ...raw, answers: defaultAnswers(), collectible };
   }
 
@@ -185,7 +184,6 @@
       <div class="score-box">
         <p class="score-label">Points</p>
         <p class="score-value">{result.points ?? 0}</p>
-        <p class="score-hint">More points for clean solves (no hints). Lives lost lower your score. Time doesn’t count.</p>
       </div>
 
       {#if scoreSaved}
@@ -241,9 +239,10 @@
           <h2>Your collectibles</h2>
           <div class="collection-row">
             {#each collectibles as c}
+              {@const card = c.number === COLLECTIBLE.number ? COLLECTIBLE : c}
               <div class="mini-card">
-                <Icon word={c.word} size={40} label={false} />
-                <span>#{c.number}</span>
+                <Icon word={card.word} size={40} label={false} />
+                <span>#{card.number}</span>
               </div>
             {/each}
           </div>
@@ -252,18 +251,6 @@
 
       <div class="answers">
         <h2>Answers</h2>
-        <div class="answer-row theme-row">
-          <div class="answer-result">
-            <span class="theme-word">central park</span>
-          </div>
-          <span class="eq">=</span>
-          <div class="answer-parts">
-            {#each ['cent', 'roll', 'park'] as icon, i}
-              {#if i > 0}<span class="plus">+</span>{/if}
-              <Icon word={icon} size={40} label={true} />
-            {/each}
-          </div>
-        </div>
         {#each GROUPS as group}
           <div class="answer-row">
             <div class="answer-result">
@@ -278,6 +265,18 @@
             </div>
           </div>
         {/each}
+        <div class="answer-row theme-row">
+          <div class="answer-result">
+            <Icon word={THEME.word} size={48} label={true} />
+          </div>
+          <span class="eq">=</span>
+          <div class="answer-parts">
+            {#each THEME.icons as icon, i}
+              {#if i > 0}<span class="plus">+</span>{/if}
+              <Icon word={icon} size={40} label={true} />
+            {/each}
+          </div>
+        </div>
       </div>
 
       <div class="actions">
@@ -337,12 +336,6 @@
     font-weight: 800;
     color: var(--gist-text);
     line-height: 1.1;
-  }
-
-  .score-hint {
-    margin: 0;
-    font-size: 0.8rem;
-    color: var(--gist-text-muted);
   }
 
   .username-line {
@@ -525,24 +518,9 @@
   }
 
   .theme-row {
-    margin-bottom: 0.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--gist-border);
-    border-top: none;
-  }
-
-  .theme-row .answer-result {
-    min-width: 7.5rem;
-  }
-
-  .theme-word {
-    display: block;
-    font-size: 1.15rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    text-transform: lowercase;
-    color: #1a1a1a;
-    line-height: 1.2;
-    white-space: nowrap;
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--gist-border);
+    border-bottom: none;
   }
 </style>
