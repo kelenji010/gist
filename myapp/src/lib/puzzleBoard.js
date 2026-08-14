@@ -1,5 +1,5 @@
 /**
- * Puzzle Board 4 — Carnival theme
+ * Puzzle Board 5 — Cent / Roll / Park
  *
  * Coordinate system (letter = column, number = row, row 1 at top):
  *   a1 b1 c1
@@ -7,22 +7,22 @@
  *   a3 b3 c3
  *
  * Visual board:
- *   [fill neon]  bumper car    minus
- *   roller coaster  clown car  on
- *   [fill horn]  red cape   bullseye target
+ *   dollar        rolled cash   [fill divide]
+ *   tree          [fill RR]     kaiser roll
+ *   swing         bench         hundred
  *
  * Groups (order inside each group does not matter):
- *   bumper car + clown car + roller coaster = car → [b1,b2,a2]
- *   neon + minus + on = knee                  → [a1,c1,c2]  (play-on-words rebus)
- *   horn + red cape + bullseye target = bull  → [a3,b3,c3]
+ *   rolled cash + rolls-royce + kaiser roll = roll  → [b1,b2,c2]
+ *   dollar + divide + hundred = cent                  → [a1,c1,c3]  (board rebus)
+ *   tree + swing + bench = park                       → [a2,a3,b3]
  *
  * Theme (shown on results):
- *   car + knee + bull = carnival
+ *   cent + roll + park = picnic
  *
- * Valid solve sequences (knee needs car solved first to path through b1):
- *   car → knee → bull
- *   car → bull → knee
- *   bull → car → knee
+ * Valid solve sequences (cent needs roll solved first to path through c2):
+ *   roll → cent → park
+ *   roll → park → cent
+ *   park → roll → cent
  */
 
 /** @typedef {{ id: string; type: 'fixed'|'fill'; word?: string; options?: string[]; correct?: string }} Cell */
@@ -30,47 +30,57 @@
 /** @type {Cell[]} */
 export const BOARD = [
   // row 1
-  { id: 'a1', type: 'fill', options: ['neon', 'x-ray', 'lamp'], correct: 'neon' },
-  { id: 'b1', type: 'fixed', word: 'bumper car' },
-  { id: 'c1', type: 'fixed', word: 'minus' },
+  { id: 'a1', type: 'fixed', word: 'dollar' },
+  { id: 'b1', type: 'fixed', word: 'rolled cash' },
+  {
+    id: 'c1',
+    type: 'fill',
+    options: ['divide', 'multiply', 'addition'],
+    correct: 'divide',
+  },
   // row 2
-  { id: 'a2', type: 'fixed', word: 'roller coaster' },
-  { id: 'b2', type: 'fixed', word: 'clown car' },
-  { id: 'c2', type: 'fixed', word: 'on' },
+  { id: 'a2', type: 'fixed', word: 'tree' },
+  {
+    id: 'b2',
+    type: 'fill',
+    options: ['maserati', 'rolls-royce', 'lamborghini'],
+    correct: 'rolls-royce',
+  },
+  { id: 'c2', type: 'fixed', word: 'kaiser roll' },
   // row 3
-  { id: 'a3', type: 'fill', options: ['horn', 'tusk', 'fingernail'], correct: 'horn' },
-  { id: 'b3', type: 'fixed', word: 'red cape' },
-  { id: 'c3', type: 'fixed', word: 'bullseye target' },
+  { id: 'a3', type: 'fixed', word: 'swing' },
+  { id: 'b3', type: 'fixed', word: 'bench' },
+  { id: 'c3', type: 'fixed', word: 'hundred' },
 ];
 
 /** Answer groups — cell ids, order inside a group does not matter. */
 export const GROUPS = [
-  { id: 'car', word: 'car', cells: ['b1', 'b2', 'a2'] },
-  { id: 'knee', word: 'knee', cells: ['a1', 'c1', 'c2'] },
-  { id: 'bull', word: 'bull', cells: ['a3', 'b3', 'c3'] },
+  { id: 'roll', word: 'roll', cells: ['b1', 'b2', 'c2'] },
+  { id: 'cent', word: 'cent', cells: ['a1', 'c1', 'c3'] },
+  { id: 'park', word: 'park', cells: ['a2', 'a3', 'b3'] },
 ];
 
-/** Final theme shown on results: car + knee + bull = carnival */
+/** Final theme shown on results: cent + roll + park = picnic */
 export const THEME = {
-  word: 'carnival',
-  icons: ['car', 'knee', 'bull'],
+  word: 'picnic',
+  icons: ['cent', 'roll', 'park'],
 };
 
 /**
  * Top-strip hint reveal order (not board tiles).
- * Hint 1 → knee (board rebus), Hint 2 → car (link), Hint 3 → bull (link).
+ * Hint 1 → cent (rebus), Hint 2 → roll (link), Hint 3 → park (link).
  */
-export const HINT_REVEAL_ORDER = ['knee', 'car', 'bull'];
+export const HINT_REVEAL_ORDER = ['cent', 'roll', 'park'];
 export const MAX_HINTS = 3;
 
 /**
  * Post-attempt tint when ≥2 tiles in a failed swipe belong to one unsolved group.
- * rebus (knee) = dark, link 1 (car) = medium, link 2 (bull) = light
+ * rebus (cent) = dark, link 1 (roll) = medium, link 2 (park) = light
  */
 export const GROUP_COLORS = {
-  knee: '#00008B',
-  car: '#0000CD',
-  bull: '#ADD8E6',
+  cent: '#00008B',
+  roll: '#0000CD',
+  park: '#ADD8E6',
 };
 
 /** @param {string} cellId */
@@ -86,18 +96,17 @@ export function colorForGroup(groupId) {
 
 /**
  * Allowed sequences for solving the three groups (by group id).
- * Exact order of the arrays matters; cell order inside a group does not.
- * Knee is not orthogonally connected until car (b1) is solved and pathable.
+ * Cent is not swipeable until roll (c2) is solved and pathable.
  */
 export const VALID_SEQUENCES = [
-  ['car', 'knee', 'bull'],
-  ['car', 'bull', 'knee'],
-  ['bull', 'car', 'knee'],
+  ['roll', 'cent', 'park'],
+  ['roll', 'park', 'cent'],
+  ['park', 'roll', 'cent'],
 ];
 
 export const COLLECTIBLE = {
-  number: '002',
-  word: 'ferris-wheel',
+  number: '003',
+  word: 'park',
 };
 
 export const MAX_LIVES = 3;
@@ -118,7 +127,6 @@ export function matchGroup(selectedIds, solvedGroupIds, fillAnswers) {
     if (solvedGroupIds.includes(group.id)) continue;
     if (!sameCellSet(selectedIds, group.cells)) continue;
 
-    // Every fill-in in this group must be correctly answered
     const cells = BOARD.filter((c) => group.cells.includes(c.id));
     const fillsOk = cells.every((c) => {
       if (c.type !== 'fill') return true;

@@ -253,9 +253,9 @@
       <div class="answers">
         <h2>Answers</h2>
         {#each result.answers ?? [] as answer}
-          <div class="answer-row" class:theme-row={answer.word === 'carnival'}>
+          <div class="answer-row" class:theme-row={answer.word === 'picnic'}>
             <div class="answer-result">
-              {#if answer.word === 'carnival'}
+              {#if answer.word === 'picnic'}
                 <span class="theme-word">{answer.word}</span>
               {:else}
                 <Icon word={answer.word} size={48} label={true} />
