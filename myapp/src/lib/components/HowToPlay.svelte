@@ -153,29 +153,25 @@
     <div class="piece">
       <h4>Fill-ins</h4>
       <p>
-        Dashed tiles with a missing icon. Tap one, pick from three choices, and tap again to
-        change your pick before you combine that group.
+        Three icons live on the same tile, split into sections. Tap one to select it, tap again
+        to deselect, then swipe that group.
       </p>
       <div class="demo demo-fill">
-        <div class="demo-tile dashed">
-          <span class="blank"></span>
-          <span class="tap-ring"></span>
-        </div>
-        <span class="demo-arrow">→</span>
-        <div class="demo-choices">
-          <div class="demo-choice pop-1">
-            <img src="/howto/mushroom.png" alt="" />
-          </div>
-          <div class="demo-choice pop-2">
-            <img src="/howto/yeast.png" alt="" />
-          </div>
-          <div class="demo-choice pop-3 highlight">
-            <img src="/howto/grass.png" alt="" />
-          </div>
-        </div>
-        <span class="demo-arrow">→</span>
-        <div class="demo-tile filled">
-          <img src="/howto/grass.png" alt="" />
+        <div class="demo-split" aria-hidden="true">
+          <span class="demo-wedge w0">
+            <span class="demo-chip"><img src="/howto/mushroom.png" alt="" /></span>
+          </span>
+          <span class="demo-wedge w1">
+            <span class="demo-chip"><img src="/howto/yeast.png" alt="" /></span>
+          </span>
+          <span class="demo-wedge w2 picked">
+            <span class="demo-chip"><img src="/howto/grass.png" alt="" /></span>
+          </span>
+          <svg class="demo-lines" viewBox="0 0 100 100">
+            <line x1="50" y1="50" x2="0" y2="0" />
+            <line x1="50" y1="50" x2="100" y2="0" />
+            <line x1="50" y1="50" x2="50" y2="100" />
+          </svg>
         </div>
       </div>
     </div>
@@ -603,124 +599,91 @@
   .demo-fill {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
-    flex-wrap: wrap;
     justify-content: center;
     padding: 0.25rem 0;
   }
 
-  .demo-tile {
-    width: 56px;
-    height: 56px;
-    border-radius: 10px;
+  .demo-split {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border: 2.5px solid #1a1a1a;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .demo-wedge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+  }
+
+  .demo-wedge.w0 {
+    clip-path: polygon(0 0, 100% 0, 50% 50%);
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8%;
+    opacity: 0.45;
+  }
+
+  .demo-wedge.w1 {
+    clip-path: polygon(0 0, 50% 50%, 50% 100%, 0 100%);
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 8%;
+    padding-top: 18%;
+    opacity: 0.45;
+  }
+
+  .demo-wedge.w2 {
+    clip-path: polygon(100% 0, 100% 100%, 50% 100%, 50% 50%);
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8%;
+    padding-top: 18%;
+    background: #eef4ff;
+  }
+
+  .demo-chip {
+    width: 36px;
+    height: 36px;
     border: 1.5px solid #1a1a1a;
+    border-radius: 8px;
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
-    position: relative;
   }
 
-  .demo-tile.dashed {
-    border-style: dashed;
-    border-color: #999;
-    background: #f0f0f0;
+  .demo-wedge.w2 .demo-chip {
+    border-width: 2px;
   }
 
-  .demo-tile img,
-  .demo-choice img,
+  .demo-split img,
   .ex-icon img {
-    width: 36px;
-    height: 36px;
+    width: 26px;
+    height: 26px;
     object-fit: contain;
     display: block;
   }
 
-  .demo-tile.filled img {
-    width: 40px;
-    height: 40px;
+  .ex-icon img {
+    width: 36px;
+    height: 36px;
   }
 
-  .blank {
-    width: 42%;
-    height: 42%;
-    border: 1.5px dashed #bbb;
-    border-radius: 4px;
-  }
-
-  .tap-ring {
+  .demo-lines {
     position: absolute;
-    inset: -4px;
-    border: 2px solid rgba(94, 143, 182, 0.7);
-    border-radius: 12px;
-    animation: tap-pulse 1.6s ease-out infinite;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
-  @keyframes tap-pulse {
-    0% {
-      transform: scale(0.92);
-      opacity: 0.9;
-    }
-    70% {
-      transform: scale(1.12);
-      opacity: 0;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-
-  .demo-arrow {
-    color: #99b4c8;
-    font-weight: 700;
-  }
-
-  .demo-choices {
-    display: flex;
-    gap: 0.3rem;
-  }
-
-  .demo-choice {
-    width: 48px;
-    height: 48px;
-    border: 1.5px solid #1a1a1a;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fafafa;
-    opacity: 0;
-    animation: choice-in 2.4s ease infinite;
-  }
-
-  .demo-choice.pop-1 {
-    animation-delay: 0.2s;
-  }
-  .demo-choice.pop-2 {
-    animation-delay: 0.45s;
-  }
-  .demo-choice.pop-3 {
-    animation-delay: 0.7s;
-  }
-
-  .demo-choice.highlight {
-    box-shadow: 0 0 0 2px rgba(94, 143, 182, 0.55);
-  }
-
-  @keyframes choice-in {
-    0%,
-    15% {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    30%,
-    70% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    100% {
-      opacity: 0.35;
-    }
+  .demo-lines line {
+    stroke: #1a1a1a;
+    stroke-width: 1;
   }
 
   .example {

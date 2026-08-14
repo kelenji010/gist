@@ -2,7 +2,7 @@
   /**
    * PUZZLE PAGE (/puzzle)
    *
-   * - Tap a fill-in tile once (empty or filled) → choose or change an icon
+   * - Fill-in tiles show 3 icons; tap one to select/deselect
    * - Swipe across 3 icons to combine them
    * - Board shows icons only (no words)
    */
@@ -44,7 +44,6 @@
   let selected = $state<string[]>([]);
   let solvedOrder = $state<string[]>([]);
   let fillAnswers = $state<Record<string, string>>({});
-  let openFillId = $state<string | null>(null);
   let feedback = $state('');
   let gameStartMs = $state(0);
   let elapsedSeconds = $state(0);
@@ -67,8 +66,8 @@
   /** Last cell under the finger (includes solved/empty tiles for pathing). */
   let swipeCursorId: string | null = null;
   let activePointerId: number | null = null;
-  /** Ignore backdrop dismiss so the opening click doesn't close the picker. */
-  let ignoreBackdropCloseUntil = 0;
+  /** Fill-in wedge under the pointer when a tap starts. */
+  let fillStartOption: string | null = null;
 
   const hintedIds = $derived(HINT_REVEAL_ORDER.slice(0, hintsUsed));
   const hintsLeft = $derived(MAX_HINTS - hintsUsed);
@@ -246,10 +245,38 @@
     selected = [...selected, cellId];
   }
 
-  function openFillPicker(cellId: string) {
-    selected = [];
-    openFillId = cellId;
-    ignoreBackdropCloseUntil = Date.now() + 400;
+  function fillOptionFromTarget(target: EventTarget | null) {
+    const el = (target as HTMLElement | null)?.closest?.('[data-fill-option]') as HTMLElement | null;
+    return el?.dataset?.fillOption ?? null;
+  }
+
+  /** Which fill-in option sits under a point on a Y-split tile. */
+  function fillOptionAtPoint(cellId: string, clientX: number, clientY: number) {
+    const cell = cellById(cellId);
+    const options = cell.options ?? [];
+    if (cell.type !== 'fill' || options.length < 3) return null;
+    const el = document.querySelector(`[data-cell-id="${cellId}"]`);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return null;
+    const px = (clientX - r.left) / r.width;
+    const py = (clientY - r.top) / r.height;
+    if (px < 0 || px > 1 || py < 0 || py > 1) return null;
+    if (py <= px && py <= 1 - px) return options[0];
+    return px < 0.5 ? options[1] : options[2];
+  }
+
+  function toggleFill(cellId: string, option: string) {
+    const current = fillAnswers[cellId];
+    if (current === option) {
+      const next = { ...fillAnswers };
+      delete next[cellId];
+      fillAnswers = next;
+      selected = selected.filter((id) => id !== cellId);
+    } else {
+      fillAnswers = { ...fillAnswers, [cellId]: option };
+    }
+    feedback = '';
   }
 
   function onTilePointerDown(event: PointerEvent, cellId: string) {
@@ -263,10 +290,12 @@
     swipeStartId = cellId;
     swipeCursorId = cellId;
     activePointerId = event.pointerId;
+    fillStartOption =
+      cell.type === 'fill' ? fillOptionAtPoint(cellId, event.clientX, event.clientY) : null;
     feedback = '';
     event.preventDefault();
 
-    // Fill-in: a click/tap opens the picker. Don't start a swipe path until
+    // Fill-in: tap a wedge to pick. Don't start a swipe path until
     // the pointer actually moves onto another tile.
     if (cell.type === 'fill') {
       selected = [];
@@ -331,6 +360,7 @@
     swipeStartId = null;
     swipeCursorId = null;
     activePointerId = null;
+    fillStartOption = null;
   }
 
   function onBoardPointerUp(event: PointerEvent) {
@@ -347,15 +377,19 @@
     const startId = swipeStartId;
     const moved = swipeMoved;
     const path = [...selected];
+    const startOption = fillStartOption;
 
     endSwipeTracking();
 
-    // Click/tap a fill-in (didn't swipe onto other tiles) → open picker.
-    // Do not require a still press — a single click is enough to change it.
+    // Click/tap a fill-in wedge (didn't swipe onto other tiles) → toggle that icon.
     if (startId && path.length <= 1) {
       const cell = cellById(startId);
       if (cell.type === 'fill' && !isSolvedCell(startId)) {
-        openFillPicker(startId);
+        const option =
+          startOption ||
+          fillOptionAtPoint(startId, event.clientX, event.clientY) ||
+          fillOptionFromTarget(event.target);
+        if (option) toggleFill(startId, option);
         return;
       }
     }
@@ -412,18 +446,10 @@
     solvedOrder = nextOrder;
     selected = [];
     feedback = 'Nice!';
-    openFillId = null;
 
     if (solvedOrder.length === GROUPS.length) {
       setTimeout(() => endGame(true), 500);
     }
-  }
-
-  function pickFill(option: string) {
-    if (!openFillId) return;
-    fillAnswers = { ...fillAnswers, [openFillId]: option };
-    openFillId = null;
-    feedback = '';
   }
 
   async function endGame(won: boolean) {
@@ -532,7 +558,6 @@
       {#each slots as slot, i}
         <div
           class="word-slot"
-          class:rebus={i === 0}
           class:filled={!!slot.word}
           class:hinted={slot.hinted}
           class:solved-slot={slot.solved}
@@ -590,6 +615,8 @@
           class:solved
           class:empty-fill={!word && isFill}
           class:filled-fill={!!word && isFill}
+          class:fill-choice={isFill && !solved}
+          class:has-pick={isFill && !!word && !solved}
           class:attempt-hint={inAttemptHint}
           class:tint-cent={attemptHint?.groupId === 'cent' && inAttemptHint}
           class:tint-roll={attemptHint?.groupId === 'roll' && inAttemptHint}
@@ -597,13 +624,41 @@
           style={attemptTint ? `--group-tint: ${attemptTint}` : ''}
           data-cell-id={cell.id}
           role="gridcell"
-          aria-label={word ? word : `Fill-in ${cell.id}`}
+          aria-label={
+            word
+              ? word
+              : isFill
+                ? `Fill-in, choose ${cell.options?.join(', ') ?? 'an icon'}`
+                : `Fill-in ${cell.id}`
+          }
           onpointerdown={(e) => onTilePointerDown(e, cell.id)}
         >
           {#if isSelected}
             <span class="swipe-order">{selectIndex + 1}</span>
           {/if}
-          {#if word}
+          {#if isFill && !solved}
+            <div class="fill-split">
+              {#each cell.options ?? [] as option, i}
+                <span
+                  class="fill-wedge"
+                  class:wedge-0={i === 0}
+                  class:wedge-1={i === 1}
+                  class:wedge-2={i === 2}
+                  class:picked={word === option}
+                  data-fill-option={option}
+                >
+                  <span class="fill-chip">
+                    <Icon word={option} size={28} label={false} />
+                  </span>
+                </span>
+              {/each}
+              <svg class="fill-lines" viewBox="0 0 100 100" aria-hidden="true">
+                <line x1="50" y1="50" x2="0" y2="0" />
+                <line x1="50" y1="50" x2="100" y2="0" />
+                <line x1="50" y1="50" x2="50" y2="100" />
+              </svg>
+            </div>
+          {:else if word}
             <Icon {word} size={64} label={false} tint={attemptTint || ''} />
           {:else}
             <span class="blank-frame" aria-hidden="true"></span>
@@ -634,46 +689,6 @@
       <button type="button" class="btn-secondary" {...tap(() => goto('/'))}>Home</button>
     </div>
   </div>
-
-  {#if openFillId}
-    {@const fillCell = cellById(openFillId)}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <div
-      class="modal-backdrop"
-      role="presentation"
-      {...tap(() => {
-        if (Date.now() < ignoreBackdropCloseUntil) return;
-        openFillId = null;
-      })}
-    >
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <div
-        class="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Choose an icon"
-        tabindex="-1"
-        onclick={(e) => e.stopPropagation()}
-        ontouchend={(e) => e.stopPropagation()}
-      >
-        <h2>Choose one</h2>
-        <div class="choices">
-          {#each fillCell.options ?? [] as option}
-            <button type="button" class="choice" {...tap(() => pickFill(option))}>
-              <Icon word={option} size={72} label={false} />
-            </button>
-          {/each}
-        </div>
-        <button
-          type="button"
-          class="modal-close"
-          {...tap(() => {
-            openFillId = null;
-          })}
-        >Cancel</button>
-      </div>
-    </div>
-  {/if}
 
   {#if showHowTo}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -792,10 +807,6 @@
     .hint-btn:hover:not(:disabled) {
       background: var(--gist-bg);
     }
-
-    .choice:hover {
-      background: #fff;
-    }
   }
 
   .hint-btn:disabled {
@@ -830,16 +841,12 @@
   .word-slot {
     aspect-ratio: 1;
     border: 1.5px solid #e5e5e5;
-    border-radius: 12px;
+    border-radius: 50%;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #fafafa;
-  }
-
-  .word-slot.rebus {
-    border-radius: 50%;
-    overflow: hidden;
   }
 
   .word-slot.filled {
@@ -910,6 +917,89 @@
     border-radius: 4px;
   }
 
+  .tile.fill-choice {
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
+    border-style: solid;
+    border-color: #1a1a1a;
+  }
+
+  .fill-split {
+    position: absolute;
+    inset: 0;
+  }
+
+  .fill-wedge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+  }
+
+  .fill-wedge.wedge-0 {
+    clip-path: polygon(0 0, 100% 0, 50% 50%);
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 7%;
+  }
+
+  .fill-wedge.wedge-1 {
+    clip-path: polygon(0 0, 50% 50%, 50% 100%, 0 100%);
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 8%;
+    padding-top: 18%;
+  }
+
+  .fill-wedge.wedge-2 {
+    clip-path: polygon(100% 0, 100% 100%, 50% 100%, 50% 50%);
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8%;
+    padding-top: 18%;
+  }
+
+  .fill-chip {
+    width: 38%;
+    max-width: 44px;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  .fill-wedge.picked {
+    background: #eef4ff;
+  }
+
+  .tile.has-pick .fill-wedge:not(.picked) {
+    opacity: 0.42;
+  }
+
+  .fill-wedge.picked .fill-chip {
+    border-width: 2px;
+    box-shadow: 0 0 0 1px #1a1a1a;
+  }
+
+  .fill-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .fill-lines line {
+    stroke: #1a1a1a;
+    stroke-width: 1;
+    stroke-linecap: square;
+  }
+
   .tile.selected {
     box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.2);
     background: #f5f5f5;
@@ -919,6 +1009,7 @@
     position: absolute;
     top: 0.35rem;
     right: 0.4rem;
+    z-index: 2;
     width: 1.15rem;
     height: 1.15rem;
     border-radius: 50%;
@@ -1003,30 +1094,6 @@
     margin: 0 0 1rem;
     font-size: 1.1rem;
     color: #1a1a1a;
-  }
-
-  .choices {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.55rem;
-  }
-
-  .choice {
-    border: 1.5px solid #1a1a1a;
-    border-radius: 12px;
-    background: #fafafa;
-    padding: 0.85rem 0.4rem;
-    cursor: pointer;
-  }
-
-  .modal-close {
-    margin-top: 1rem;
-    background: none;
-    border: none;
-    color: #777;
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 0.95rem;
   }
 
   @media (max-width: 420px) {
