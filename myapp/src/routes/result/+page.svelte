@@ -252,24 +252,32 @@
 
       <div class="answers">
         <h2>Answers</h2>
-        {#each result.answers ?? [] as answer}
-          <div class="answer-row" class:theme-row={answer.word === THEME.word}>
+        {#each GROUPS as group}
+          <div class="answer-row">
             <div class="answer-result">
-              {#if answer.word === THEME.word}
-                <span class="theme-word">{answer.word}</span>
-              {:else}
-                <Icon word={answer.word} size={48} label={true} />
-              {/if}
+              <Icon word={group.word} size={48} label={true} />
             </div>
             <span class="eq">=</span>
             <div class="answer-parts">
-              {#each answer.icons ?? [] as icon, i}
+              {#each iconsForGroup(group) as icon, i}
                 {#if i > 0}<span class="plus">+</span>{/if}
                 <Icon word={icon} size={40} label={true} />
               {/each}
             </div>
           </div>
         {/each}
+        <div class="answer-row theme-row">
+          <div class="answer-result">
+            <span class="theme-word">{THEME.word}</span>
+          </div>
+          <span class="eq">=</span>
+          <div class="answer-parts">
+            {#each THEME.icons as icon, i}
+              {#if i > 0}<span class="plus">+</span>{/if}
+              <Icon word={icon} size={40} label={true} />
+            {/each}
+          </div>
+        </div>
       </div>
 
       <div class="actions">
@@ -523,6 +531,10 @@
     border-bottom: none;
   }
 
+  .theme-row .answer-result {
+    min-width: 6.5rem;
+  }
+
   .theme-word {
     display: block;
     font-size: 0.95rem;
@@ -531,6 +543,5 @@
     text-transform: lowercase;
     color: var(--gist-text);
     line-height: 1.2;
-    max-width: 7rem;
   }
 </style>
