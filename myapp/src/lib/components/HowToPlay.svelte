@@ -488,6 +488,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
     border-color: #00008b;
     background: #f0f0ff;
   }

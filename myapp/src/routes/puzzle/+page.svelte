@@ -532,6 +532,7 @@
       {#each slots as slot, i}
         <div
           class="word-slot"
+          class:rebus={i === 0}
           class:filled={!!slot.word}
           class:hinted={slot.hinted}
           class:solved-slot={slot.solved}
@@ -834,6 +835,11 @@
     align-items: center;
     justify-content: center;
     background: #fafafa;
+  }
+
+  .word-slot.rebus {
+    border-radius: 50%;
+    overflow: hidden;
   }
 
   .word-slot.filled {
