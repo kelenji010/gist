@@ -59,12 +59,11 @@
 
   function normalizeResult(raw: typeof result) {
     if (!raw) return null;
-    const answers = (
-      Array.isArray(raw.answers) && raw.answers.length > 0 ? raw.answers : defaultAnswers()
-    ).map((a) => (a.word === 'picnic' ? { ...a, word: THEME.word } : a));
+    // Always use the current answer key so a stale saved result
+    // (e.g. picnic) cannot keep showing the old theme.
     const collectible =
       raw.collectible ?? (raw.won ? COLLECTIBLE : null);
-    return { ...raw, answers, collectible };
+    return { ...raw, answers: defaultAnswers(), collectible };
   }
 
   onMount(() => {
@@ -80,8 +79,8 @@
         answers: defaultAnswers(),
         collectible: COLLECTIBLE,
       };
-      saveResult(result);
     }
+    if (result) saveResult(result);
     usernameDraft = result?.username || getUsername() || '';
     scoreSaved = !!result?.scoreSaved;
     collectibles = getLocalCollectibles();
@@ -531,5 +530,7 @@
     letter-spacing: 0.04em;
     text-transform: lowercase;
     color: var(--gist-text);
+    line-height: 1.2;
+    max-width: 7rem;
   }
 </style>
