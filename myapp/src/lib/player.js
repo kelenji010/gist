@@ -6,6 +6,7 @@
 const USERNAME_KEY = 'gist_username';
 const HISTORY_KEY = 'gist_history';
 const COLLECTIBLES_KEY = 'gist_collectibles';
+const HOWTO_SEEN_KEY = 'gist_howto_seen';
 
 function hasStorage() {
   return typeof window !== 'undefined' && !!window.localStorage;
@@ -69,6 +70,18 @@ function getHistory() {
 export function hasPlayedThisWeek() {
   const week = weekKey();
   return getHistory().some((entry) => entry.weekKey === week || entry.date === week);
+}
+
+/** True if the player has already seen the how-to instructions. */
+export function hasSeenHowTo() {
+  if (!hasStorage()) return false;
+  return window.localStorage.getItem(HOWTO_SEEN_KEY) === '1';
+}
+
+/** Mark how-to instructions as seen (first-visit popup won't show again). */
+export function markHowToSeen() {
+  if (!hasStorage()) return;
+  window.localStorage.setItem(HOWTO_SEEN_KEY, '1');
 }
 
 /** Mark this week's puzzle as finished for this browser. */

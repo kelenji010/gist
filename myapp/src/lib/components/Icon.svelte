@@ -1,23 +1,26 @@
 <script>
   /**
-   * Puzzle icon from /static/icons/*.png (user's reference art).
-   * Soft-clue `tint` uses a border wash — not a CSS mask — so colorful
-   * icons (neon, photos) stay visible instead of disappearing.
+   * Puzzle icon — PNG art or large emoji glyph.
+   * Soft-clue `tint` uses a border wash so colorful icons stay visible.
    */
-  import { iconSrc, iconLabel } from '$lib/icons.js';
+  import { iconSrc, iconLabel, iconEmoji } from '$lib/icons.js';
 
   let { word = '', size = 48, label = false, tint = '' } = $props();
 
   const src = $derived(iconSrc(word));
+  const emoji = $derived(iconEmoji(word));
   const text = $derived(iconLabel(word));
 </script>
 
 <span
   class="icon"
   class:has-tint={!!tint}
+  class:is-emoji={!!emoji}
   style="--size: {size}px; --tint: {tint || 'transparent'}"
 >
-  {#if src}
+  {#if emoji}
+    <span class="emoji" aria-hidden="true">{emoji}</span>
+  {:else if src}
     <img class="art" src={src} alt="" width={size} height={size} draggable="false" />
   {/if}
   {#if label && text}
@@ -30,8 +33,24 @@
     display: inline-flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 0.3rem;
     pointer-events: none;
+  }
+
+  .emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size);
+    height: var(--size);
+    font-size: calc(var(--size) * 0.88);
+    line-height: 1;
+    user-select: none;
+  }
+
+  .icon.is-emoji .emoji {
+    font-size: calc(var(--size) * 0.92);
   }
 
   .art {
@@ -44,7 +63,8 @@
     -webkit-user-drag: none;
   }
 
-  .icon.has-tint .art {
+  .icon.has-tint .art,
+  .icon.has-tint .emoji {
     border-radius: 8px;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--tint) 70%, transparent);
     background: color-mix(in srgb, var(--tint) 14%, white);

@@ -11,8 +11,11 @@
     setUsername,
     generateUsername,
     validateUsername,
+    hasSeenHowTo,
+    markHowToSeen,
   } from '$lib/player.js';
   import HowToPlay from '$lib/components/HowToPlay.svelte';
+  import ScoreboardPanel from '$lib/components/ScoreboardPanel.svelte';
   import { tap } from '$lib/iosTap.js';
 
   let playedThisWeek = $state(false);
@@ -22,15 +25,28 @@
   let openPanel = $state<'scoreboard' | null>(null);
   let showHowTo = $state(false);
 
+  function closeHowTo() {
+    markHowToSeen();
+    showHowTo = false;
+  }
+
+  function toggleScoreboard() {
+    openPanel = openPanel === 'scoreboard' ? null : 'scoreboard';
+  }
+
   onMount(() => {
     playedThisWeek = hasPlayedThisWeek();
     username = getUsername();
     usernameDraft = username;
 
+    if (!hasSeenHowTo()) {
+      showHowTo = true;
+    }
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         openPanel = null;
-        showHowTo = false;
+        if (showHowTo) closeHowTo();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -67,27 +83,25 @@
 <main>
   <div class="container">
     <div class="border">
-      <div class="top-border">
-        <button
-          type="button"
-          class="icon-btn"
-          aria-label="How to play"
-          aria-expanded={showHowTo}
-          {...tap(() => {
-            showHowTo = true;
-          })}
-        >ⓘ</button>
+      <div class="inner-border">
+        <div class="top-controls">
+          <button
+            type="button"
+            class="icon-btn"
+            aria-label="How to play"
+            aria-expanded={showHowTo}
+            {...tap(() => {
+              showHowTo = true;
+            })}
+          >ⓘ</button>
 
-        <div class="top-actions">
           <div class="panel-anchor">
             <button
               type="button"
               class="icon-btn"
               aria-label="Scoreboard"
               aria-expanded={openPanel === 'scoreboard'}
-              {...tap(() => {
-                openPanel = openPanel === 'scoreboard' ? null : 'scoreboard';
-              })}
+              {...tap(toggleScoreboard)}
             >🜲</button>
             {#if openPanel === 'scoreboard'}
               <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -100,19 +114,22 @@
               ></div>
               <div class="panel panel-right" role="dialog" aria-label="Scoreboard">
                 <div class="panel-header">Scoreboard</div>
-                <p class="panel-body">Weekly top scores.</p>
+                <ScoreboardPanel
+                  compact={true}
+                  highlightUsername={username}
+                  autoLoad={false}
+                  open={openPanel === 'scoreboard'}
+                />
                 <button
                   type="button"
                   class="panel-link"
                   {...tap(() => goto('/leaderboard'))}
-                >Open scoreboard</button>
+                >Full scoreboard</button>
               </div>
             {/if}
           </div>
         </div>
-      </div>
 
-      <div class="inner-border">
         <div class="center">
           <img src="/gistv4.png" width="250" alt="Gist Logo" />
         </div>
@@ -136,8 +153,6 @@
             </div>
             {#if usernameError}
               <p class="field-error">{usernameError}</p>
-            {:else}
-              <p class="field-hint">Saved to the weekly scoreboard when you finish.</p>
             {/if}
           </div>
         {/if}
@@ -182,9 +197,7 @@
     <div
       class="modal-backdrop"
       role="presentation"
-      {...tap(() => {
-        showHowTo = false;
-      })}
+      {...tap(closeHowTo)}
     >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <div
@@ -196,7 +209,7 @@
         onclick={(e) => e.stopPropagation()}
         ontouchend={(e) => e.stopPropagation()}
       >
-        <HowToPlay onClose={() => (showHowTo = false)} />
+        <HowToPlay onClose={closeHowTo} />
       </div>
     </div>
   {/if}
@@ -228,23 +241,16 @@
     flex-direction: column;
   }
 
-  .top-border {
+  .top-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem 1.5rem;
-    color: var(--gist-text);
+    max-width: 520px;
+    width: 100%;
+    margin: 0 auto 1.25rem;
     position: relative;
     z-index: 5;
-  }
-
-  .top-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    justify-content: flex-end;
   }
 
   .panel-anchor {
@@ -256,11 +262,11 @@
     color: #33566b;
     border: 1px solid var(--gist-border);
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 1.15rem;
     line-height: 1;
-    padding: 0.45rem 0.7rem;
-    min-width: 2.5rem;
-    min-height: 2.5rem;
+    padding: 0.55rem 0.85rem;
+    min-width: 2.85rem;
+    min-height: 2.85rem;
     cursor: pointer;
   }
 
@@ -280,7 +286,7 @@
     position: absolute;
     top: calc(100% + 0.5rem);
     z-index: 30;
-    width: min(280px, calc(100vw - 2rem));
+    width: min(320px, calc(100vw - 2rem));
     padding: 1rem 1.1rem;
     background: #fff;
     border: 1.5px solid var(--gist-border);
@@ -294,19 +300,12 @@
   }
 
   .panel-header {
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.5rem;
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--gist-text);
-  }
-
-  .panel-body {
-    margin: 0;
-    font-size: 0.85rem;
-    line-height: 1.4;
-    color: var(--gist-text-muted);
   }
 
   .panel-link {
@@ -331,7 +330,7 @@
   }
 
   .inner-border {
-    padding: 3rem 2rem;
+    padding: 2rem 2rem 3rem;
     text-align: center;
     flex: 1;
   }
@@ -394,17 +393,9 @@
     white-space: nowrap;
   }
 
-  .field-hint,
   .field-error {
     margin: 0.4rem 0 0;
     font-size: 0.8rem;
-  }
-
-  .field-hint {
-    color: var(--gist-text-muted);
-  }
-
-  .field-error {
     color: #c45b5b;
     font-weight: 600;
   }
@@ -504,12 +495,13 @@
         max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
     }
 
-    .top-border {
-      padding: 0.85rem 1rem;
+    .inner-border {
+      padding: 1.5rem 1rem 2rem;
     }
 
-    .inner-border {
-      padding: 2rem 1rem;
+    .top-controls {
+      max-width: 100%;
+      margin-bottom: 1rem;
     }
 
     .text {

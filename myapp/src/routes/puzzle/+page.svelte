@@ -33,7 +33,7 @@
     addLocalCollectible,
     weekKey,
   } from '$lib/player.js';
-  import { saveResult, formatTime } from '$lib/resultStore.js';
+  import { saveResult } from '$lib/resultStore.js';
   import HowToPlay from '$lib/components/HowToPlay.svelte';
   import { tap } from '$lib/iosTap.js';
 
@@ -71,7 +71,7 @@
   const hintedIds = $derived(HINT_REVEAL_ORDER.slice(0, hintsUsed));
   const hintsLeft = $derived(MAX_HINTS - hintsUsed);
 
-  /** Top strip: car → knee → bull. Shown when solved or revealed by hint. */
+  /** Top strip: cent → roll → park. Shown when solved or revealed by hint. */
   const slots = $derived(
     THEME.icons.map((id) => {
       const visible = solvedOrder.includes(id) || hintedIds.includes(id);
@@ -447,8 +447,8 @@
       scoreSaved: false,
       answers,
       fillAnswers: {
-        a1: 'neon',
-        a3: 'horn',
+        c1: 'divide',
+        b2: 'rolls-royce',
       },
       collectible,
     });
@@ -472,8 +472,8 @@
           scoreSaved: true,
           answers,
           fillAnswers: {
-            a1: 'neon',
-            a3: 'horn',
+            c1: 'divide',
+            b2: 'rolls-royce',
           },
           collectible,
         });
@@ -493,7 +493,7 @@
   <div class="puzzle-container">
     <header class="header">
       <div class="title-row">
-        <h1>Gist</h1>
+        <h1>gist</h1>
         <button
           type="button"
           class="help-btn"
@@ -503,17 +503,9 @@
           })}
         >ⓘ</button>
       </div>
-      <div class="hud">
-        <span class="hud-item" title="Lives">
-          {#each Array(MAX_LIVES) as _, i}
-            <span class="life" class:lost={i >= lives}>♥</span>
-          {/each}
-        </span>
-        <span class="hud-item timer">{formatTime(elapsedSeconds)}</span>
-      </div>
     </header>
 
-    <!-- Top strip: car → knee → bull (solved or hinted) -->
+    <!-- Top strip: cent → roll → park (solved or hinted) -->
     <div class="word-strip" aria-label="Answer strip">
       {#each slots as slot, i}
         <div
@@ -523,7 +515,7 @@
           class:solved-slot={slot.solved}
         >
           {#if slot.word}
-            <Icon word={slot.word} size={44} label={false} />
+            <Icon word={slot.word} size={52} label={false} />
           {:else}
             <span class="slot-num">{i + 1}</span>
           {/if}
@@ -532,7 +524,11 @@
     </div>
 
     <div class="hint-row">
-      <p class="play-tip">Tap a dashed tile to fill it. Swipe 3 icons to combine.</p>
+      <div class="lives-row" aria-label="Lives remaining">
+        {#each Array(MAX_LIVES) as _, i}
+          <span class="life" class:lost={i >= lives} aria-hidden="true">♥</span>
+        {/each}
+      </div>
       <button
         type="button"
         class="hint-btn"
@@ -572,9 +568,9 @@
           class:empty-fill={!word && isFill}
           class:filled-fill={!!word && isFill}
           class:attempt-hint={inAttemptHint}
-          class:tint-knee={attemptHint?.groupId === 'knee' && inAttemptHint}
-          class:tint-car={attemptHint?.groupId === 'car' && inAttemptHint}
-          class:tint-bull={attemptHint?.groupId === 'bull' && inAttemptHint}
+          class:tint-cent={attemptHint?.groupId === 'cent' && inAttemptHint}
+          class:tint-roll={attemptHint?.groupId === 'roll' && inAttemptHint}
+          class:tint-park={attemptHint?.groupId === 'park' && inAttemptHint}
           style={attemptTint ? `--group-tint: ${attemptTint}` : ''}
           data-cell-id={cell.id}
           role="gridcell"
@@ -585,7 +581,7 @@
             <span class="swipe-order">{selectIndex + 1}</span>
           {/if}
           {#if word}
-            <Icon {word} size={56} label={false} tint={attemptTint || ''} />
+            <Icon {word} size={64} label={false} tint={attemptTint || ''} />
           {:else}
             <span class="blank-frame" aria-hidden="true"></span>
           {/if}
@@ -640,7 +636,7 @@
         <div class="choices">
           {#each fillCell.options ?? [] as option}
             <button type="button" class="choice" {...tap(() => pickFill(option))}>
-              <Icon word={option} size={64} label={false} />
+              <Icon word={option} size={72} label={false} />
             </button>
           {/each}
         </div>
@@ -713,11 +709,11 @@
     background: var(--gist-bg);
     color: #33566b;
     border: 1px solid var(--gist-border);
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 10px;
+    font-size: 1.35rem;
     line-height: 1;
-    min-width: 2.25rem;
-    min-height: 2.25rem;
+    min-width: 3rem;
+    min-height: 3rem;
     cursor: pointer;
   }
 
@@ -727,31 +723,77 @@
     }
   }
 
-  .hud {
+  .hint-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0 0.65rem;
   }
 
-  .hud-item {
-    font-weight: 700;
-    color: var(--gist-text-muted);
-    font-size: 0.95rem;
+  .lives-row {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 2.5rem;
   }
 
   .life {
     color: #c45b5b;
-    margin-left: 0.15rem;
+    font-size: 1.85rem;
+    line-height: 1;
   }
 
   .life.lost {
-    opacity: 0.25;
+    opacity: 0.22;
   }
 
-  .timer {
-    font-variant-numeric: tabular-nums;
-    min-width: 3rem;
-    text-align: right;
+  .hint-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+    min-height: 52px;
+    padding: 0.55rem 1.1rem;
+    border-radius: 999px;
+    border: 2px solid var(--gist-border-strong);
+    background: #fff;
+    color: var(--gist-text);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hint-btn:hover:not(:disabled) {
+      background: var(--gist-bg);
+    }
+
+    .choice:hover {
+      background: #fff;
+    }
+  }
+
+  .hint-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .hint-dots {
+    display: inline-flex;
+    gap: 0.35rem;
+  }
+
+  .hint-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    border: 2px solid var(--gist-primary);
+    background: transparent;
+  }
+
+  .hint-dot.used {
+    background: var(--gist-primary);
   }
 
   .word-strip {
@@ -792,87 +834,6 @@
     color: #ccc;
     font-weight: 700;
     font-size: 1.1rem;
-  }
-
-  .hint-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin: 0 0 0.85rem;
-  }
-
-  .play-tip {
-    margin: 0;
-    color: var(--gist-text-muted);
-    font-size: 0.82rem;
-    line-height: 1.3;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .hint-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    min-height: 40px;
-    padding: 0.4rem 0.75rem;
-    border-radius: 999px;
-    border: 1.5px solid var(--gist-border-strong);
-    background: #fff;
-    color: var(--gist-text);
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .hint-btn:hover:not(:disabled) {
-      background: var(--gist-bg);
-    }
-
-    .choice:hover {
-      background: #fff;
-    }
-  }
-
-  .hint-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .hint-dots {
-    display: inline-flex;
-    gap: 0.28rem;
-  }
-
-  .hint-dot {
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 50%;
-    border: 1.5px solid var(--gist-primary);
-    background: transparent;
-  }
-
-  .hint-dot.used {
-    background: var(--gist-primary);
-  }
-
-  @media (max-width: 420px) {
-    .hint-row {
-      flex-wrap: wrap;
-    }
-
-    .play-tip {
-      flex-basis: 100%;
-      order: 2;
-      text-align: center;
-    }
-
-    .hint-btn {
-      margin-left: auto;
-    }
   }
 
   .board {
@@ -946,15 +907,15 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--group-tint, transparent) 40%, white);
   }
 
-  .tile.tint-knee {
+  .tile.tint-cent {
     --group-tint: #00008b;
   }
 
-  .tile.tint-car {
+  .tile.tint-roll {
     --group-tint: #0000cd;
   }
 
-  .tile.tint-bull {
+  .tile.tint-park {
     --group-tint: #add8e6;
   }
 
