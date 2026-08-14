@@ -227,14 +227,14 @@
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 2rem 2rem 4.5rem;
     flex: 1;
     display: flex;
     flex-direction: column;
   }
 
   .border {
-    background: white;
+    background: var(--gist-page);
     overflow: visible;
     flex: 1;
     display: flex;
@@ -252,7 +252,7 @@
     position: absolute;
     top: 0.85rem;
     left: 0.85rem;
-    right: 0.85rem;
+    right: 4.1rem;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -276,7 +276,7 @@
     justify-content: center;
     flex: 0 0 auto;
     background: var(--gist-bg);
-    color: #33566b;
+    color: var(--gist-icon-btn-fg);
     border: 1px solid var(--gist-border);
     border-radius: 8px;
     font-size: 1.15rem;
@@ -289,7 +289,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .icon-btn:hover {
-      background: #d8e8f3;
+      background: var(--gist-icon-btn-hover);
     }
   }
 
@@ -305,15 +305,15 @@
     z-index: 30;
     width: min(320px, calc(100vw - 2rem));
     padding: 1rem 1.1rem;
-    background: #fff;
+    background: var(--gist-surface);
     border: 1.5px solid var(--gist-border);
     border-radius: 12px;
-    box-shadow: 0 10px 28px rgba(45, 74, 98, 0.12);
+    box-shadow: 0 10px 28px var(--gist-shadow);
     text-align: left;
   }
 
   .panel-right {
-    right: 0;
+    right: 3.4rem;
   }
 
   .panel-header {
@@ -342,7 +342,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .panel-link:hover {
-      background: #d8e8f3;
+      background: var(--gist-icon-btn-hover);
     }
   }
 
@@ -388,7 +388,7 @@
     border-radius: 10px;
     font-size: 1rem;
     color: var(--gist-text);
-    background: #fff;
+    background: var(--gist-surface);
   }
 
   .ghost-btn {
@@ -443,7 +443,7 @@
 
   :global(.btn-group.btn-primary) {
     background: linear-gradient(135deg, var(--gist-primary-light), var(--gist-primary));
-    color: #fff;
+    color: var(--gist-on-primary);
     border: none;
     box-shadow: 0 2px 8px rgba(94, 143, 182, 0.35);
   }
@@ -455,7 +455,7 @@
   }
 
   :global(.btn-group.btn-secondary) {
-    background: #fff;
+    background: var(--gist-surface);
     color: var(--gist-text-muted);
     border: 2px solid var(--gist-border-strong);
   }
@@ -482,7 +482,7 @@
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--gist-overlay);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -492,12 +492,12 @@
   }
 
   .modal {
-    background: #fff;
+    background: var(--gist-surface);
     border-radius: 16px;
     padding: 1.25rem 1.25rem 1.5rem;
     width: min(440px, 100%);
     margin: 1rem 0;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 12px 40px var(--gist-shadow);
   }
 
   .howto-modal {
@@ -517,7 +517,7 @@
     .top-controls {
       top: 0.65rem;
       left: 0.65rem;
-      right: 0.65rem;
+      right: 3.9rem;
     }
 
     .text {

@@ -67,7 +67,7 @@
   .icon.has-tint .emoji {
     border-radius: 8px;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--tint) 70%, transparent);
-    background: color-mix(in srgb, var(--tint) 14%, white);
+    background: color-mix(in srgb, var(--tint) 14%, var(--gist-tile));
   }
 
   .word {

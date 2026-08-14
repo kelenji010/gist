@@ -26,7 +26,7 @@
   .login-panel {
     max-width: 480px;
     width: 100%;
-    background: white;
+    background: var(--gist-surface);
     color: var(--gist-text);
     padding: 2.5rem 2rem;
     border-radius: 16px;

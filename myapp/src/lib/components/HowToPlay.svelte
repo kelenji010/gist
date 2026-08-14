@@ -438,20 +438,20 @@
   }
 
   .ortho-grid .ok {
-    background: #fff;
+    background: var(--gist-tile);
     border: 1.5px solid var(--gist-primary);
     color: var(--gist-primary-dark);
   }
 
   .ortho-grid .center {
-    background: #1a1a1a;
-    color: #fff;
-    border: 1.5px solid #1a1a1a;
+    background: var(--gist-ink);
+    color: var(--gist-on-ink);
+    border: 1.5px solid var(--gist-ink);
   }
 
   .ortho-grid .ghost {
     background: transparent;
-    border: 1.5px dashed #d5e2ec;
+    border: 1.5px dashed var(--gist-border);
     color: transparent;
   }
 
@@ -477,7 +477,7 @@
     justify-content: center;
     width: fit-content;
     margin: 0 auto 0.65rem;
-    border: 1.5px solid #ccc;
+    border: 1.5px solid var(--gist-border);
     border-radius: 8px;
     overflow: hidden;
   }
@@ -485,9 +485,9 @@
   .mini-tile {
     width: 42px;
     height: 42px;
-    border-right: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-    background: #fafafa;
+    border-right: 1px solid var(--gist-border);
+    border-bottom: 1px solid var(--gist-border);
+    background: var(--gist-slot);
     position: relative;
     display: flex;
     align-items: center;
@@ -504,7 +504,7 @@
   }
 
   .mini-tile.on-path {
-    background: #eef5fb;
+    background: var(--gist-fill-pick);
     box-shadow: inset 0 0 0 2px var(--gist-primary);
   }
 
@@ -517,8 +517,8 @@
     width: 1.1rem;
     height: 1.1rem;
     border-radius: 50%;
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--gist-ink);
+    color: var(--gist-on-ink);
     font-size: 0.65rem;
     font-weight: 700;
     display: flex;
@@ -547,8 +547,8 @@
   .diagram-tile {
     aspect-ratio: 1;
     border-radius: 8px;
-    border: 1.5px solid #ccc;
-    background: #fff;
+    border: 1.5px solid var(--gist-border);
+    background: var(--gist-tile);
   }
 
   .diagram-slot.strip-icon {
@@ -560,17 +560,17 @@
     border-radius: 50%;
     overflow: hidden;
     border-color: #00008b;
-    background: #f0f0ff;
+    background: color-mix(in srgb, #00008b 16%, var(--gist-tile));
   }
 
   .diagram-slot.strip-icon.empty {
-    border-color: #d0d0d0;
-    background: #fafafa;
+    border-color: var(--gist-slot-border);
+    background: var(--gist-slot);
   }
 
   .diagram-slot.strip-icon.filled {
-    border-color: #1a1a1a;
-    background: #fff;
+    border-color: var(--gist-tile-border);
+    background: var(--gist-tile);
   }
 
   .diagram-slot.strip-icon img {
@@ -581,7 +581,7 @@
   }
 
   .slot-num {
-    color: #ccc;
+    color: var(--gist-border-strong);
     font-weight: 700;
     font-size: 1.05rem;
   }
@@ -618,7 +618,7 @@
   .demo-arrow {
     display: block;
     text-align: center;
-    color: #99b4c8;
+    color: var(--gist-text-muted);
     font-weight: 700;
     font-size: 1.1rem;
     line-height: 1;
@@ -635,15 +635,15 @@
     gap: 0;
     max-width: 180px;
     margin: 0 auto 0.75rem;
-    border: 1.5px solid #bbb;
+    border: 1.5px solid var(--gist-muted-line);
     border-radius: 10px;
     overflow: hidden;
   }
 
   .diagram-tile {
     min-height: 44px;
-    border-right: 1px solid #bbb;
-    border-bottom: 1px solid #bbb;
+    border-right: 1px solid var(--gist-muted-line);
+    border-bottom: 1px solid var(--gist-muted-line);
     border-radius: 0;
   }
 
@@ -656,20 +656,20 @@
   }
 
   .diagram-tile.group-rebus {
-    background: #e8e8ff;
+    background: var(--gist-rebus-tint);
   }
 
   .diagram-tile.group-link-a {
-    background: #e8eeff;
+    background: var(--gist-link-a-tint);
   }
 
   .diagram-tile.group-link-b {
-    background: #eef4ff;
+    background: var(--gist-link-b-tint);
   }
 
   .diagram-tile.is-fill {
-    background: #f0f0f0;
-    box-shadow: inset 0 0 0 1.5px #999;
+    background: var(--gist-tile-muted);
+    box-shadow: inset 0 0 0 1.5px var(--gist-muted-line);
   }
 
   .board-legend {
@@ -699,21 +699,21 @@
   }
 
   .swatch.rebus {
-    background: #e8e8ff;
+    background: var(--gist-rebus-tint);
   }
 
   .swatch.link-a {
-    background: #e8eeff;
+    background: var(--gist-link-a-tint);
   }
 
   .swatch.link-b {
-    background: #eef4ff;
+    background: var(--gist-link-b-tint);
   }
 
   .swatch.fill {
-    background: #f0f0f0;
+    background: var(--gist-tile-muted);
     border-style: dashed;
-    border-color: #999;
+    border-color: var(--gist-muted-line);
   }
 
   .piece {
@@ -735,10 +735,10 @@
     position: relative;
     width: 120px;
     height: 120px;
-    border: 2.5px solid #1a1a1a;
+    border: 2.5px solid var(--gist-tile-border);
     border-radius: 12px;
     overflow: hidden;
-    background: #fff;
+    background: var(--gist-tile);
   }
 
   .demo-wedge {
@@ -770,15 +770,15 @@
     justify-content: flex-end;
     padding-right: 8%;
     padding-top: 18%;
-    background: #eef4ff;
+    background: var(--gist-link-b-tint);
   }
 
   .demo-chip {
     width: 36px;
     height: 36px;
-    border: 1.5px solid #1a1a1a;
+    border: 1.5px solid var(--gist-tile-border);
     border-radius: 8px;
-    background: #fff;
+    background: var(--gist-tile);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -810,7 +810,7 @@
   }
 
   .demo-lines line {
-    stroke: #1a1a1a;
+    stroke: var(--gist-tile-border);
     stroke-width: 1;
   }
 
@@ -818,7 +818,7 @@
     border: 1px solid var(--gist-border);
     border-radius: 12px;
     padding: 0.7rem 0.75rem;
-    background: #fff;
+    background: var(--gist-surface);
     margin-bottom: 0.55rem;
   }
 
@@ -847,7 +847,7 @@
 
   .plus,
   .eq {
-    color: #999;
+    color: var(--gist-muted-line);
     font-weight: 700;
   }
 
@@ -873,7 +873,7 @@
     padding: 0.4rem 0.85rem;
     border-radius: 10px;
     border: 1.5px solid var(--gist-border-strong);
-    background: #fff;
+    background: var(--gist-surface);
     color: var(--gist-text);
     font-weight: 700;
     font-size: 0.88rem;
@@ -883,7 +883,7 @@
   .nav-btn.primary {
     background: var(--gist-primary);
     border-color: var(--gist-primary);
-    color: #fff;
+    color: var(--gist-on-primary);
   }
 
   .nav-btn:disabled {

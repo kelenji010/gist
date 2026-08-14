@@ -186,7 +186,7 @@
   }
 
   tr.me {
-    background: #f0f7fc;
+    background: color-mix(in srgb, var(--gist-primary) 18%, var(--gist-surface));
   }
 
   .rank {

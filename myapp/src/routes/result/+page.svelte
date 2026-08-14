@@ -409,7 +409,7 @@
   }
 
   .panel {
-    background: #fff;
+    background: var(--gist-surface);
     border: 1.5px solid var(--gist-border);
     border-radius: 16px;
     padding: 2rem 1.5rem;
@@ -421,11 +421,11 @@
   }
 
   .card {
-    border: 1.5px solid #1a1a1a;
+    border: 1.5px solid var(--gist-tile-border);
     border-radius: 4px;
     padding: 1.75rem 1.25rem;
     margin: 0 auto 1.75rem;
-    background: #fff;
+    background: var(--gist-tile);
     max-width: 280px;
   }
 
@@ -434,7 +434,7 @@
     font-size: 0.85rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #1a1a1a;
+    color: var(--gist-text);
     font-weight: 650;
   }
 
@@ -496,7 +496,7 @@
     align-items: center;
     gap: 0.65rem;
     padding: 0.75rem 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--gist-hairline);
     flex-wrap: wrap;
   }
 
@@ -506,7 +506,7 @@
 
   .eq,
   .plus {
-    color: #999;
+    color: var(--gist-muted-line);
     font-weight: 700;
   }
 

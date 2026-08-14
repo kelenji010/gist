@@ -738,7 +738,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.5rem 0 1rem;
+    padding: 0.5rem 3.4rem 1rem 0;
   }
 
   .title-row {
@@ -757,7 +757,7 @@
 
   .help-btn {
     background: var(--gist-bg);
-    color: #33566b;
+    color: var(--gist-icon-btn-fg);
     border: 1px solid var(--gist-border);
     border-radius: 10px;
     font-size: 1.35rem;
@@ -769,7 +769,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .help-btn:hover {
-      background: #d8e8f3;
+      background: var(--gist-icon-btn-hover);
     }
   }
 
@@ -807,7 +807,7 @@
     padding: 0.55rem 1.1rem;
     border-radius: 999px;
     border: 2px solid var(--gist-border-strong);
-    background: #fff;
+    background: var(--gist-surface);
     color: var(--gist-text);
     font-weight: 700;
     font-size: 1rem;
@@ -851,34 +851,34 @@
 
   .word-slot {
     aspect-ratio: 1;
-    border: 1.5px solid #e5e5e5;
+    border: 1.5px solid var(--gist-slot-border);
     border-radius: 50%;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fafafa;
+    background: var(--gist-slot);
   }
 
   .word-slot.filled {
-    border-color: #1a1a1a;
-    background: #fff;
+    border-color: var(--gist-tile-border);
+    background: var(--gist-tile);
   }
 
   .word-slot.hinted {
     border-color: var(--gist-border-strong);
     border-style: dashed;
-    background: #f4f9fc;
+    background: var(--gist-surface-alt);
   }
 
   .word-slot.solved-slot {
     border-style: solid;
-    border-color: #1a1a1a;
-    background: #fff;
+    border-color: var(--gist-tile-border);
+    background: var(--gist-tile);
   }
 
   .slot-num {
-    color: #ccc;
+    color: var(--gist-border-strong);
     font-weight: 700;
     font-size: 1.1rem;
   }
@@ -898,9 +898,9 @@
 
   .tile {
     aspect-ratio: 1;
-    border: 1.5px solid #1a1a1a;
+    border: 1.5px solid var(--gist-tile-border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--gist-tile);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -916,24 +916,24 @@
   }
 
   .tile.empty-fill {
-    background: #f0f0f0;
+    background: var(--gist-tile-muted);
     border-style: dashed;
-    border-color: #999;
+    border-color: var(--gist-muted-line);
   }
 
   .blank-frame {
     width: 42%;
     height: 42%;
-    border: 1.5px dashed #bbb;
+    border: 1.5px dashed var(--gist-muted-line);
     border-radius: 4px;
   }
 
   .tile.fill-choice {
     padding: 0;
     overflow: hidden;
-    background: #fff;
+    background: var(--gist-tile);
     border-style: solid;
-    border-color: #1a1a1a;
+    border-color: var(--gist-tile-border);
   }
 
   .fill-split {
@@ -977,23 +977,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
-    border: 1.5px solid #1a1a1a;
-    border-radius: 8px;
     pointer-events: none;
   }
 
   .fill-wedge.picked {
-    background: #eef4ff;
+    background: var(--gist-fill-pick);
   }
 
   .tile.has-pick .fill-wedge:not(.picked) {
     opacity: 0.42;
-  }
-
-  .fill-wedge.picked .fill-chip {
-    border-width: 2px;
-    box-shadow: 0 0 0 1px #1a1a1a;
   }
 
   .fill-lines {
@@ -1006,14 +998,14 @@
   }
 
   .fill-lines line {
-    stroke: #1a1a1a;
+    stroke: var(--gist-tile-border);
     stroke-width: 1;
     stroke-linecap: square;
   }
 
   .tile.selected {
-    box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.2);
-    background: #f5f5f5;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gist-ink) 20%, transparent);
+    background: var(--gist-tile-selected);
   }
 
   .swipe-order {
@@ -1024,8 +1016,8 @@
     width: 1.15rem;
     height: 1.15rem;
     border-radius: 50%;
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--gist-ink);
+    color: var(--gist-on-ink);
     font-size: 0.7rem;
     font-weight: 700;
     display: flex;
@@ -1038,9 +1030,9 @@
   }
 
   .tile.attempt-hint {
-    border-color: var(--group-tint, #1a1a1a);
-    background: color-mix(in srgb, var(--group-tint, #fff) 18%, white);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--group-tint, transparent) 40%, white);
+    border-color: var(--group-tint, var(--gist-tile-border));
+    background: color-mix(in srgb, var(--group-tint, var(--gist-tile)) 18%, var(--gist-tile));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--group-tint, transparent) 40%, var(--gist-tile));
   }
 
   .tile.tint-cent {
@@ -1070,7 +1062,7 @@
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--gist-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1086,12 +1078,12 @@
   }
 
   .modal {
-    background: #fff;
+    background: var(--gist-surface);
     border-radius: 16px;
     padding: 1.5rem;
     width: min(400px, 100%);
     text-align: center;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 12px 40px var(--gist-shadow);
   }
 
   .howto-modal {
@@ -1104,7 +1096,7 @@
   .modal h2 {
     margin: 0 0 1rem;
     font-size: 1.1rem;
-    color: #1a1a1a;
+    color: var(--gist-text);
   }
 
   @media (max-width: 420px) {
