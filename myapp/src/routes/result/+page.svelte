@@ -59,8 +59,9 @@
 
   function normalizeResult(raw: typeof result) {
     if (!raw) return null;
-    const answers =
-      Array.isArray(raw.answers) && raw.answers.length > 0 ? raw.answers : defaultAnswers();
+    const answers = (
+      Array.isArray(raw.answers) && raw.answers.length > 0 ? raw.answers : defaultAnswers()
+    ).map((a) => (a.word === 'picnic' ? { ...a, word: THEME.word } : a));
     const collectible =
       raw.collectible ?? (raw.won ? COLLECTIBLE : null);
     return { ...raw, answers, collectible };
@@ -253,9 +254,9 @@
       <div class="answers">
         <h2>Answers</h2>
         {#each result.answers ?? [] as answer}
-          <div class="answer-row" class:theme-row={answer.word === 'picnic'}>
+          <div class="answer-row" class:theme-row={answer.word === THEME.word}>
             <div class="answer-result">
-              {#if answer.word === 'picnic'}
+              {#if answer.word === THEME.word}
                 <span class="theme-word">{answer.word}</span>
               {:else}
                 <Icon word={answer.word} size={48} label={true} />

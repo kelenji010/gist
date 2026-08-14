@@ -2,7 +2,7 @@
   /**
    * PUZZLE PAGE (/puzzle)
    *
-   * - Tap a dashed fill-in tile → choose an icon
+   * - Tap a fill-in tile once (empty or filled) → choose or change an icon
    * - Swipe across 3 icons to combine them
    * - Board shows icons only (no words)
    */
@@ -67,6 +67,8 @@
   /** Last cell under the finger (includes solved/empty tiles for pathing). */
   let swipeCursorId: string | null = null;
   let activePointerId: number | null = null;
+  /** Ignore backdrop dismiss so the opening click doesn't close the picker. */
+  let ignoreBackdropCloseUntil = 0;
 
   const hintedIds = $derived(HINT_REVEAL_ORDER.slice(0, hintsUsed));
   const hintsLeft = $derived(MAX_HINTS - hintsUsed);
@@ -244,37 +246,40 @@
     selected = [...selected, cellId];
   }
 
+  function openFillPicker(cellId: string) {
+    selected = [];
+    openFillId = cellId;
+    ignoreBackdropCloseUntil = Date.now() + 400;
+  }
+
   function onTilePointerDown(event: PointerEvent, cellId: string) {
     if (phase !== 'playing' || isSolvedCell(cellId)) return;
     clearAttemptHint();
 
     const cell = cellById(cellId);
 
-    // Empty fill-in: prepare for tap → picker (no swipe until filled)
-    if (cell.type === 'fill' && !displayWord(cellId)) {
-      swiping = true;
-      swipeMoved = false;
-      swipeStartId = cellId;
-      swipeCursorId = cellId;
-      activePointerId = event.pointerId;
-      selected = [];
-      feedback = '';
-      return;
-    }
-
-    if (!displayWord(cellId)) {
-      feedback = 'Fill this tile first.';
-      return;
-    }
-
     swiping = true;
     swipeMoved = false;
     swipeStartId = cellId;
     swipeCursorId = cellId;
     activePointerId = event.pointerId;
-    selected = [cellId];
     feedback = '';
     event.preventDefault();
+
+    // Fill-in: a click/tap opens the picker. Don't start a swipe path until
+    // the pointer actually moves onto another tile.
+    if (cell.type === 'fill') {
+      selected = [];
+      return;
+    }
+
+    if (!displayWord(cellId)) {
+      endSwipeTracking();
+      feedback = 'Fill this tile first.';
+      return;
+    }
+
+    selected = [cellId];
   }
 
   function onBoardPointerMove(event: PointerEvent) {
@@ -288,6 +293,17 @@
 
     // Only step to an edge-neighbor of the current cursor (no diagonals / corner cuts)
     if (swipeCursorId && !isOrthogonalNeighbors(swipeCursorId, id)) return;
+
+    // Started on a filled fill-in: begin the swipe once we leave that tile
+    if (
+      selected.length === 0 &&
+      swipeStartId &&
+      id !== swipeStartId &&
+      displayWord(swipeStartId) &&
+      cellById(swipeStartId).type === 'fill'
+    ) {
+      selected = [swipeStartId];
+    }
 
     // Also block selecting a tile that would make the chosen path diagonal
     if (
@@ -320,7 +336,13 @@
   function onBoardPointerUp(event: PointerEvent) {
     if (!swiping) return;
     // iOS can recycle pointer ids / cancel mid-gesture — still finish the swipe.
-    if (activePointerId != null && event.pointerId !== activePointerId) return;
+    if (
+      activePointerId != null &&
+      event.pointerId !== activePointerId &&
+      event.type !== 'pointercancel'
+    ) {
+      return;
+    }
 
     const startId = swipeStartId;
     const moved = swipeMoved;
@@ -328,12 +350,12 @@
 
     endSwipeTracking();
 
-    // Tap on fill-in (empty or filled) → open picker to set/change icon
-    if (startId && !moved) {
+    // Click/tap a fill-in (didn't swipe onto other tiles) → open picker.
+    // Do not require a still press — a single click is enough to change it.
+    if (startId && path.length <= 1) {
       const cell = cellById(startId);
       if (cell.type === 'fill' && !isSolvedCell(startId)) {
-        selected = [];
-        openFillId = startId;
+        openFillPicker(startId);
         return;
       }
     }
@@ -619,6 +641,7 @@
       class="modal-backdrop"
       role="presentation"
       {...tap(() => {
+        if (Date.now() < ignoreBackdropCloseUntil) return;
         openFillId = null;
       })}
     >
@@ -861,6 +884,11 @@
     position: relative;
     touch-action: none;
     transition: box-shadow 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+  }
+
+  .tile.empty-fill,
+  .tile.filled-fill {
+    cursor: pointer;
   }
 
   .tile.empty-fill {

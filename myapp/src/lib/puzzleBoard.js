@@ -17,7 +17,7 @@
  *   tree + swing + bench = park                       → [a2,a3,b3]
  *
  * Theme (shown on results):
- *   cent + roll + park = picnic
+ *   cent + roll + park = central park
  *
  * Valid solve sequences (cent needs roll solved first to path through c2):
  *   roll → cent → park
@@ -60,9 +60,9 @@ export const GROUPS = [
   { id: 'park', word: 'park', cells: ['a2', 'a3', 'b3'] },
 ];
 
-/** Final theme shown on results: cent + roll + park = picnic */
+/** Final theme shown on results: cent + roll + park = central park */
 export const THEME = {
-  word: 'picnic',
+  word: 'central park',
   icons: ['cent', 'roll', 'park'],
 };
 
