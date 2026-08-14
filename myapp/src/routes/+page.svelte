@@ -201,7 +201,7 @@
     >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <div
-        class="modal"
+        class="modal howto-modal"
         role="dialog"
         aria-modal="true"
         aria-label="How to play"
@@ -498,6 +498,10 @@
     width: min(440px, 100%);
     margin: 1rem 0;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  }
+
+  .howto-modal {
+    width: min(480px, 100%);
   }
 
   @media (max-width: 768px) {

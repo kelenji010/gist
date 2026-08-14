@@ -32,6 +32,8 @@
     computePoints,
     addLocalCollectible,
     weekKey,
+    hasSeenHowTo,
+    markHowToSeen,
   } from '$lib/player.js';
   import { saveResult } from '$lib/resultStore.js';
   import HowToPlay from '$lib/components/HowToPlay.svelte';
@@ -86,6 +88,11 @@
     })
   );
 
+  function closeHowTo() {
+    markHowToSeen();
+    showHowTo = false;
+  }
+
   function useHint() {
     if (phase !== 'playing' || hintsUsed >= MAX_HINTS) return;
     hintsUsed += 1;
@@ -98,6 +105,10 @@
       blocked = true;
       goto('/result');
       return;
+    }
+
+    if (!hasSeenHowTo()) {
+      showHowTo = true;
     }
 
     gameStartMs = Date.now();
@@ -696,7 +707,7 @@
       class="modal-backdrop howto-backdrop"
       role="presentation"
       {...tap(() => {
-        showHowTo = false;
+        closeHowTo();
       })}
     >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -709,7 +720,7 @@
         onclick={(e) => e.stopPropagation()}
         ontouchend={(e) => e.stopPropagation()}
       >
-        <HowToPlay onClose={() => (showHowTo = false)} />
+        <HowToPlay onClose={closeHowTo} />
       </div>
     </div>
   {/if}
@@ -1084,7 +1095,7 @@
   }
 
   .howto-modal {
-    width: min(440px, 100%);
+    width: min(480px, 100%);
     text-align: left;
     margin: 1rem 0;
     padding: 1.25rem 1.25rem 1.5rem;

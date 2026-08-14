@@ -26,8 +26,15 @@
   ];
   const wordplayResult = { src: '/howto/ice-cream.png', label: 'ice cream' };
 
-  /** Top strip — three icons that combine into one rebus. */
-  const topStripIcons = rebusParts;
+  /**
+   * Combine demo — L-swipe on a mini 3×3 (same path as the move example).
+   * Indices: 0 1 2 / 3 4 5 / 6 7 8
+   */
+  const combinePath = {
+    6: { src: '/howto/car.png', order: 1 },
+    7: { src: '/howto/tea.png', order: 2 },
+    4: { src: '/howto/gun.png', order: 3 },
+  };
 
   /**
    * 3×3 schematic matching a real board layout:
@@ -46,6 +53,13 @@
     { group: 'link-b' },
     { group: 'rebus' },
   ];
+
+  const SLIDE_COUNT = 4;
+  let slide = $state(0);
+
+  function go(delta) {
+    slide = Math.max(0, Math.min(SLIDE_COUNT - 1, slide + delta));
+  }
 </script>
 
 <div class="howto">
@@ -56,7 +70,8 @@
     {/if}
   </div>
 
-  <section class="step">
+  <div class="slides">
+  <section class="step" hidden={slide !== 0}>
     <h3>1. How do you move?</h3>
     <p>
       Swipe across tiles <strong>orthogonally</strong> — only horizontal or vertical moves along
@@ -80,47 +95,53 @@
 
     <div class="swipe-demo" aria-hidden="true">
       <p class="caption">Example swipe on the board</p>
-      <div class="mini-board">
-        {#each Array(9) as _, i}
-          {@const row = Math.floor(i / 3)}
-          {@const col = i % 3}
-          {@const onPath =
-            (row === 2 && col === 0) || (row === 2 && col === 1) || (row === 1 && col === 1)}
-          {@const order =
-            row === 2 && col === 0 ? 1 : row === 2 && col === 1 ? 2 : row === 1 && col === 1 ? 3 : 0}
-          <span class="mini-tile" class:on-path={onPath}>
-            {#if order}<span class="swipe-num">{order}</span>{/if}
-          </span>
-        {/each}
+      <div class="swipe-pair">
+        <div class="swipe-col">
+          <div class="mini-board">
+            {#each Array(9) as _, i}
+              {@const row = Math.floor(i / 3)}
+              {@const col = i % 3}
+              {@const onPath =
+                (row === 2 && col === 0) || (row === 2 && col === 1) || (row === 1 && col === 1)}
+              {@const order =
+                row === 2 && col === 0 ? 1 : row === 2 && col === 1 ? 2 : row === 1 && col === 1 ? 3 : 0}
+              <span class="mini-tile" class:on-path={onPath}>
+                {#if order}<span class="swipe-num">{order}</span>{/if}
+              </span>
+            {/each}
+          </div>
+          <p class="caption muted good">✓ Orthogonal</p>
+        </div>
+        <div class="swipe-col">
+          <div class="mini-board">
+            {#each Array(9) as _, i}
+              {@const row = Math.floor(i / 3)}
+              {@const col = i % 3}
+              {@const onPath = row === col}
+              <span class="mini-tile" class:on-path={onPath} class:bad-path={onPath}></span>
+            {/each}
+          </div>
+          <p class="caption muted bad">✗ No diagonals</p>
+        </div>
       </div>
-      <p class="caption muted good">✓ L-shaped swipe — each step moves along a shared edge</p>
-      <div class="mini-board bad">
-        {#each Array(9) as _, i}
-          {@const row = Math.floor(i / 3)}
-          {@const col = i % 3}
-          {@const onPath = row === col}
-          <span class="mini-tile" class:on-path={onPath} class:bad-path={onPath}></span>
-        {/each}
-      </div>
-      <p class="caption muted bad">✗ Diagonal swipes are not allowed</p>
     </div>
   </section>
 
-  <section class="step">
+  <section class="step" hidden={slide !== 1}>
     <h3>2. The puzzle board</h3>
     <p>
       Every week has <strong>2 rebuses</strong>, <strong>2 links</strong>, and
-      <strong>2 fill-ins</strong>. The <strong>top strip</strong> is three icons that combine
-      into a rebus. The <strong>3×3 board</strong> has one rebus, two links, and two fill-ins.
+      <strong>2 fill-ins</strong>. Group three icons on the <strong>3×3 board</strong> — that
+      group’s answer fills one circle in the <strong>top strip</strong>. The three strip
+      answers then combine into a rebus.
     </p>
 
     <div class="board-diagram" aria-hidden="true">
       <p class="caption">Top strip — rebus</p>
       <div class="strip-row">
-        {#each topStripIcons as icon, i}
-          {#if i > 0}<span class="strip-plus">+</span>{/if}
-          <div class="diagram-slot strip-icon">
-            <img src={icon.src} alt="" />
+        {#each [1, 2, 3] as n}
+          <div class="diagram-slot strip-icon empty">
+            <span class="slot-num">{n}</span>
           </div>
         {/each}
       </div>
@@ -139,22 +160,43 @@
       </div>
 
       <ul class="board-legend">
-        <li><span class="swatch rebus"></span> Rebus</li>
-        <li><span class="swatch link-a"></span> Link</li>
-        <li><span class="swatch link-b"></span> Link</li>
-        <li><span class="swatch fill"></span> Fill-in</li>
+        <li><span class="swatch rebus"></span> 1 rebus</li>
+        <li><span class="swatch link-a"></span> 2 link</li>
+        <li><span class="swatch fill"></span> 2 fill-in</li>
       </ul>
+    </div>
+
+    <div class="combine-demo" aria-hidden="true">
+      <p class="caption">Combine three icons</p>
+      <div class="mini-board combine-board">
+        {#each Array(9) as _, i}
+          {@const step = combinePath[i]}
+          <span class="mini-tile" class:on-path={!!step}>
+            {#if step}
+              <img src={step.src} alt="" />
+              <span class="swipe-num">{step.order}</span>
+            {/if}
+          </span>
+        {/each}
+      </div>
+      <span class="demo-arrow">↓</span>
+      <div class="strip-row">
+        <div class="diagram-slot strip-icon filled">
+          <img src={rebusResult.src} alt="" />
+        </div>
+        <div class="diagram-slot strip-icon empty"><span class="slot-num">2</span></div>
+        <div class="diagram-slot strip-icon empty"><span class="slot-num">3</span></div>
+      </div>
     </div>
   </section>
 
-  <section class="step">
+  <section class="step" hidden={slide !== 2}>
     <h3>3. Puzzle pieces</h3>
 
     <div class="piece">
       <h4>Fill-ins</h4>
       <p>
-        Three icons live on the same tile, split into sections. Tap one to select it, tap again
-        to deselect, then swipe that group.
+        Tap one to select it, tap again to deselect.
       </p>
       <div class="demo demo-fill">
         <div class="demo-split" aria-hidden="true">
@@ -179,8 +221,7 @@
     <div class="piece">
       <h4>Rebus</h4>
       <p>
-        Three icons that combine into a new word — by stacking sounds, math, symbols, or a play
-        on words. One rebus answer appears in the top strip; the other is solved on the board.
+        Combine icons into a new word by stacking sounds, math, symbols, or a play on words.
       </p>
       <div class="example">
         <p class="caption">Sound stack</p>
@@ -222,7 +263,7 @@
 
     <div class="piece">
       <h4>Links</h4>
-      <p>Three icons that share one idea, category, or theme.</p>
+      <p>Group icons that share one idea, category, or theme.</p>
       <div class="example">
         <div class="example-row">
           {#each linkParts as part, i}
@@ -243,13 +284,44 @@
     </div>
   </section>
 
-  <section class="step">
+  <section class="step" hidden={slide !== 3}>
     <h3>4. One play per week</h3>
     <p>
-      Finish to earn a collectible and climb the weekly scoreboard. Score is based on correct
-      answers without hints (best), answers with hints, and lives lost.
+      Finish to earn a collectible and climb the weekly scoreboard. Score is based on number
+      of hints used and lives lost.
     </p>
   </section>
+  </div>
+
+  <div class="slide-nav">
+    <button
+      type="button"
+      class="nav-btn"
+      disabled={slide === 0}
+      {...(slide === 0 ? {} : tap(() => go(-1)))}
+    >Back</button>
+    <div class="dots" aria-label="Slides">
+      {#each Array(SLIDE_COUNT) as _, i}
+        <button
+          type="button"
+          class="dot"
+          class:on={slide === i}
+          aria-label={`Slide ${i + 1}`}
+          aria-current={slide === i ? 'step' : undefined}
+          {...tap(() => {
+            slide = i;
+          })}
+        ></button>
+      {/each}
+    </div>
+    {#if slide < SLIDE_COUNT - 1}
+      <button type="button" class="nav-btn primary" {...tap(() => go(1))}>Next</button>
+    {:else if onClose}
+      <button type="button" class="nav-btn primary" {...tap(onClose)}>Got it</button>
+    {:else}
+      <button type="button" class="nav-btn primary" disabled>Done</button>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -263,7 +335,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.65rem;
   }
 
   h2 {
@@ -285,13 +357,13 @@
   }
 
   .step {
-    padding: 0.85rem 0;
-    border-top: 1px solid var(--gist-border);
+    padding: 0;
+    border: none;
+    min-width: 0;
   }
 
-  .step:first-of-type {
-    border-top: none;
-    padding-top: 0;
+  .step[hidden] {
+    display: none;
   }
 
   h3 {
@@ -306,9 +378,9 @@
   }
 
   p {
-    margin: 0 0 0.75rem;
-    font-size: 0.88rem;
-    line-height: 1.45;
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
     color: var(--gist-text-muted);
   }
 
@@ -387,6 +459,17 @@
     margin-top: 0.5rem;
   }
 
+  .swipe-pair {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .swipe-col {
+    text-align: center;
+  }
+
   .mini-board {
     display: grid;
     grid-template-columns: repeat(3, 42px);
@@ -397,10 +480,6 @@
     border: 1.5px solid #ccc;
     border-radius: 8px;
     overflow: hidden;
-  }
-
-  .mini-board.bad {
-    margin-top: 0.5rem;
   }
 
   .mini-tile {
@@ -459,15 +538,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: 0.45rem;
     max-width: 240px;
     margin: 0 auto 0.85rem;
-  }
-
-  .strip-plus {
-    color: #999;
-    font-weight: 700;
-    font-size: 0.85rem;
   }
 
   .diagram-slot,
@@ -490,11 +563,66 @@
     background: #f0f0ff;
   }
 
+  .diagram-slot.strip-icon.empty {
+    border-color: #d0d0d0;
+    background: #fafafa;
+  }
+
+  .diagram-slot.strip-icon.filled {
+    border-color: #1a1a1a;
+    background: #fff;
+  }
+
   .diagram-slot.strip-icon img {
     width: 34px;
     height: 34px;
     object-fit: contain;
     display: block;
+  }
+
+  .slot-num {
+    color: #ccc;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  .combine-demo {
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px dashed var(--gist-border);
+  }
+
+  .combine-board {
+    grid-template-columns: repeat(3, 52px);
+    margin-bottom: 0.2rem;
+  }
+
+  .combine-board .mini-tile {
+    width: 52px;
+    height: 52px;
+  }
+
+  .combine-board .mini-tile img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .combine-board .swipe-num {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+  }
+
+  .demo-arrow {
+    display: block;
+    text-align: center;
+    color: #99b4c8;
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1;
+    margin: 0.15rem 0 0.4rem;
   }
 
   .board-caption {
@@ -505,7 +633,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0;
-    max-width: 220px;
+    max-width: 180px;
     margin: 0 auto 0.75rem;
     border: 1.5px solid #bbb;
     border-radius: 10px;
@@ -513,7 +641,7 @@
   }
 
   .diagram-tile {
-    min-height: 52px;
+    min-height: 44px;
     border-right: 1px solid #bbb;
     border-bottom: 1px solid #bbb;
     border-radius: 0;
@@ -727,5 +855,59 @@
     margin: 0.5rem 0 0;
     font-size: 0.8rem;
     color: var(--gist-text-muted);
+  }
+
+  .slide-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--gist-border);
+  }
+
+  .nav-btn {
+    min-height: 40px;
+    min-width: 4.5rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 10px;
+    border: 1.5px solid var(--gist-border-strong);
+    background: #fff;
+    color: var(--gist-text);
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+
+  .nav-btn.primary {
+    background: var(--gist-primary);
+    border-color: var(--gist-primary);
+    color: #fff;
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .dots {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 2px solid var(--gist-primary);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .dot.on {
+    background: var(--gist-primary);
   }
 </style>
