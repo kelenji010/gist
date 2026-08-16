@@ -4,11 +4,10 @@
  */
 
 /** Bump when icon binaries change so production/CDN caches refresh. */
-const ICON_CACHE = 'v15';
+const ICON_CACHE = 'v16';
 
 /** Emoji glyphs keyed by normalized icon id. */
 const EMOJI_ICONS = {
-  cent: '¢',
   roll: '🧻',
   dollar: '$',
   divide: '÷',

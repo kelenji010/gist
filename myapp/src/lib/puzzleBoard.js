@@ -1,5 +1,5 @@
 /**
- * Puzzle Board 5 — Cent / Roll / Park
+ * Puzzle Board 5 — Scent / Roll / Park
  *
  * Coordinate system (letter = column, number = row, row 1 at top):
  *   a1 b1 c1
@@ -12,17 +12,17 @@
  *   slide         bench         hundred
  *
  * Groups (order inside each group does not matter):
- *   dollar + divide + hundred = cent                  → [a1,c1,c3]  (board rebus)
+ *   dollar + divide + hundred = scent                 → [a1,c1,c3]  (board rebus)
  *   rolled cash + rolls-royce + kaiser roll = roll  → [b1,b2,c2]
  *   tree + slide + bench = park                       → [a2,a3,b3]
  *
  * Theme (shown on results):
- *   cent + roll + park = central park
+ *   scent + roll + park = central park
  *
- * Valid solve sequences (cent needs roll solved first to path through c2):
- *   roll → cent → park
- *   roll → park → cent
- *   park → roll → cent
+ * Valid solve sequences (scent needs roll solved first to path through c2):
+ *   roll → scent → park
+ *   roll → park → scent
+ *   park → roll → scent
  */
 
 /** @typedef {{ id: string; type: 'fixed'|'fill'; word?: string; options?: string[]; correct?: string }} Cell */
@@ -55,30 +55,30 @@ export const BOARD = [
 
 /** Answer groups — cell ids, order inside a group does not matter. */
 export const GROUPS = [
-  { id: 'cent', word: 'cent', cells: ['a1', 'c1', 'c3'] },
+  { id: 'scent', word: 'scent', cells: ['a1', 'c1', 'c3'] },
   { id: 'roll', word: 'roll', cells: ['b1', 'b2', 'c2'] },
   { id: 'park', word: 'park', cells: ['a2', 'a3', 'b3'] },
 ];
 
-/** Final theme shown on results: cent + roll + park = central park */
+/** Final theme shown on results: scent + roll + park = central park */
 export const THEME = {
   word: 'central park',
-  icons: ['cent', 'roll', 'park'],
+  icons: ['scent', 'roll', 'park'],
 };
 
 /**
  * Top-strip hint reveal order (not board tiles).
- * Hint 1 → cent (rebus), Hint 2 → roll (link), Hint 3 → park (link).
+ * Hint 1 → scent (rebus), Hint 2 → roll (link), Hint 3 → park (link).
  */
-export const HINT_REVEAL_ORDER = ['cent', 'roll', 'park'];
+export const HINT_REVEAL_ORDER = ['scent', 'roll', 'park'];
 export const MAX_HINTS = 3;
 
 /**
  * Post-attempt tint when ≥2 tiles in a failed swipe belong to one unsolved group.
- * rebus (cent) = dark, link 1 (roll) = medium, link 2 (park) = light
+ * rebus (scent) = dark, link 1 (roll) = medium, link 2 (park) = light
  */
 export const GROUP_COLORS = {
-  cent: '#00008B',
+  scent: '#00008B',
   roll: '#0000CD',
   park: '#ADD8E6',
 };
@@ -96,12 +96,12 @@ export function colorForGroup(groupId) {
 
 /**
  * Allowed sequences for solving the three groups (by group id).
- * Cent is not swipeable until roll (c2) is solved and pathable.
+ * Scent is not swipeable until roll (c2) is solved and pathable.
  */
 export const VALID_SEQUENCES = [
-  ['roll', 'cent', 'park'],
-  ['roll', 'park', 'cent'],
-  ['park', 'roll', 'cent'],
+  ['roll', 'scent', 'park'],
+  ['roll', 'park', 'scent'],
+  ['park', 'roll', 'scent'],
 ];
 
 export const COLLECTIBLE = {

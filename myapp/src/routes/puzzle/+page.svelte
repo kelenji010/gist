@@ -74,7 +74,7 @@
   const hintedIds = $derived(HINT_REVEAL_ORDER.slice(0, hintsUsed));
   const hintsLeft = $derived(MAX_HINTS - hintsUsed);
 
-  /** Top strip: cent → roll → park. Shown when solved or revealed by hint. */
+  /** Top strip: scent → roll → park. Shown when solved or revealed by hint. */
   const slots = $derived(
     THEME.icons.map((id) => {
       const visible = solvedOrder.includes(id) || hintedIds.includes(id);
@@ -564,7 +564,7 @@
       </div>
     </header>
 
-    <!-- Top strip: cent → roll → park (solved or hinted) -->
+    <!-- Top strip: scent → roll → park (solved or hinted) -->
     <div class="word-strip" aria-label="Answer strip">
       {#each slots as slot, i}
         <div
@@ -629,7 +629,7 @@
           class:fill-choice={isFill && !solved}
           class:has-pick={isFill && !!word && !solved}
           class:attempt-hint={inAttemptHint}
-          class:tint-cent={attemptHint?.groupId === 'cent' && inAttemptHint}
+          class:tint-scent={attemptHint?.groupId === 'scent' && inAttemptHint}
           class:tint-roll={attemptHint?.groupId === 'roll' && inAttemptHint}
           class:tint-park={attemptHint?.groupId === 'park' && inAttemptHint}
           style={attemptTint ? `--group-tint: ${attemptTint}` : ''}
@@ -1035,7 +1035,7 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--group-tint, transparent) 40%, var(--gist-tile));
   }
 
-  .tile.tint-cent {
+  .tile.tint-scent {
     --group-tint: #00008b;
   }
 

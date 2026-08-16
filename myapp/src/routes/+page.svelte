@@ -24,14 +24,36 @@
   let usernameError = $state('');
   let openPanel = $state<'scoreboard' | null>(null);
   let showHowTo = $state(false);
+  /** Ignore leftover iOS click after opening so the popup isn't closed or skipped. */
+  let ignoreScoreboardUntil = 0;
 
   function closeHowTo() {
     markHowToSeen();
     showHowTo = false;
   }
 
+  function scoreboardGestureIsStale() {
+    return Date.now() < ignoreScoreboardUntil;
+  }
+
   function toggleScoreboard() {
-    openPanel = openPanel === 'scoreboard' ? null : 'scoreboard';
+    if (openPanel === 'scoreboard') {
+      if (scoreboardGestureIsStale()) return;
+      openPanel = null;
+      return;
+    }
+    openPanel = 'scoreboard';
+    ignoreScoreboardUntil = Date.now() + 500;
+  }
+
+  function closeScoreboard() {
+    if (scoreboardGestureIsStale()) return;
+    openPanel = null;
+  }
+
+  function openFullScoreboard() {
+    if (scoreboardGestureIsStale()) return;
+    goto('/leaderboard');
   }
 
   onMount(() => {
@@ -84,7 +106,7 @@
   <div class="container">
     <div class="border">
       <div class="inner-border">
-        <div class="top-controls">
+        <div class="top-controls" class:panel-open={openPanel === 'scoreboard'}>
           <button
             type="button"
             class="icon-btn"
@@ -108,11 +130,16 @@
               <div
                 class="panel-backdrop"
                 role="presentation"
-                {...tap(() => {
-                  openPanel = null;
-                })}
+                {...tap(closeScoreboard)}
               ></div>
-              <div class="panel panel-right" role="dialog" aria-label="Scoreboard">
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <div
+                class="panel panel-right"
+                role="dialog"
+                aria-label="Scoreboard"
+                onclick={(e) => e.stopPropagation()}
+                ontouchend={(e) => e.stopPropagation()}
+              >
                 <div class="panel-header">Scoreboard</div>
                 <ScoreboardPanel
                   compact={true}
@@ -123,7 +150,7 @@
                 <button
                   type="button"
                   class="panel-link"
-                  {...tap(() => goto('/leaderboard'))}
+                  {...tap(openFullScoreboard)}
                 >Full scoreboard</button>
               </div>
             {/if}
@@ -263,6 +290,10 @@
     max-width: none;
     margin: 0;
     z-index: 5;
+  }
+
+  .top-controls.panel-open {
+    z-index: 50;
   }
 
   .panel-anchor {
@@ -529,7 +560,20 @@
     }
 
     .panel {
-      width: min(260px, calc(100vw - 1.5rem));
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 4.35rem);
+      left: max(0.75rem, env(safe-area-inset-left));
+      right: max(0.75rem, env(safe-area-inset-right));
+      width: auto;
+      max-width: 22rem;
+      margin-inline: auto 0;
+      max-height: min(70dvh, 28rem);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .panel-right {
+      right: max(0.75rem, env(safe-area-inset-right));
     }
   }
 </style>
