@@ -14,7 +14,7 @@
  * Groups (order inside each group does not matter):
  *   mink + rabbit + fox = fur                         → [a1,a2,b2]
  *   anthill + ant colony + queen = ant                → [a3,b3,c3]
- *   shh + she + hip = ship                            → [b1,c1,c2]  (board rebus)
+ *   shh + she + hip = ship                            → [c2,c1,b1]  (board rebus)
  *
  * Theme (shown on results):
  *   fur + ant + ship = friendship
@@ -51,12 +51,12 @@ export const BOARD = [
   { id: 'c3', type: 'fixed', word: 'queen' },
 ];
 
-/** Answer groups — cell ids, order inside a group does not matter. */
+/** Answer groups — cell-id order is the results equation (matching is unordered). */
 /** @type {Group[]} */
 export const GROUPS = [
   { id: 'fur', word: 'fur', kind: 'link', cells: ['a1', 'a2', 'b2'] },
   { id: 'ant', word: 'ant', kind: 'link', cells: ['a3', 'b3', 'c3'] },
-  { id: 'ship', word: 'ship', kind: 'rebus', cells: ['b1', 'c1', 'c2'] },
+  { id: 'ship', word: 'ship', kind: 'rebus', cells: ['c2', 'c1', 'b1'] },
 ];
 
 /** Final theme shown on results: fur + ant + ship = friendship */
