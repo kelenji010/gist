@@ -1,5 +1,5 @@
 /**
- * Puzzle Board 5 — Scent / Roll / Park
+ * Puzzle Board 6 — Fur / Ant / Ship
  *
  * Coordinate system (letter = column, number = row, row 1 at top):
  *   a1 b1 c1
@@ -7,80 +7,82 @@
  *   a3 b3 c3
  *
  * Visual board:
- *   dollar        rolled cash   [fill divide]
- *   tree          [fill RR]     kaiser roll
- *   slide         bench         hundred
+ *   mink          she           hip
+ *   rabbit        shh           [fill fox]
+ *   [fill anthill] ant colony   queen
  *
  * Groups (order inside each group does not matter):
- *   dollar + divide + hundred = scent                 → [a1,c1,c3]  (board rebus)
- *   rolled cash + rolls-royce + kaiser roll = roll  → [b1,b2,c2]
- *   tree + slide + bench = park                       → [a2,a3,b3]
+ *   mink + rabbit + fox = fur                         → [a1,a2,c2]
+ *   anthill + ant colony + queen = ant                → [a3,b3,c3]
+ *   shh + she + hip = ship                            → [b1,b2,c1]  (board rebus)
  *
  * Theme (shown on results):
- *   scent + roll + park = central park
+ *   fur + ant + ship = friendship
  *
- * Valid solve sequences (scent needs roll solved first to path through c2):
- *   roll → scent → park
- *   roll → park → scent
- *   park → roll → scent
+ * Valid solve sequences (fur needs ship solved first to path through b2):
+ *   ship → fur → ant
+ *   ship → ant → fur
+ *   ant → ship → fur
  */
 
 /** @typedef {{ id: string; type: 'fixed'|'fill'; word?: string; options?: string[]; correct?: string }} Cell */
+/** @typedef {{ id: string; word: string; kind: 'link'|'rebus'; cells: string[] }} Group */
 
 /** @type {Cell[]} */
 export const BOARD = [
   // row 1
-  { id: 'a1', type: 'fixed', word: 'dollar' },
-  { id: 'b1', type: 'fixed', word: 'rolled cash' },
-  {
-    id: 'c1',
-    type: 'fill',
-    options: ['divide', 'multiply', 'addition'],
-    correct: 'divide',
-  },
+  { id: 'a1', type: 'fixed', word: 'mink' },
+  { id: 'b1', type: 'fixed', word: 'she' },
+  { id: 'c1', type: 'fixed', word: 'hip' },
   // row 2
-  { id: 'a2', type: 'fixed', word: 'tree' },
+  { id: 'a2', type: 'fixed', word: 'rabbit' },
+  { id: 'b2', type: 'fixed', word: 'shh' },
   {
-    id: 'b2',
+    id: 'c2',
     type: 'fill',
-    options: ['maserati', 'rolls-royce', 'lamborghini'],
-    correct: 'rolls-royce',
+    options: ['fox', 'lamb', 'goat'],
+    correct: 'fox',
   },
-  { id: 'c2', type: 'fixed', word: 'kaiser roll' },
   // row 3
-  { id: 'a3', type: 'fixed', word: 'slide' },
-  { id: 'b3', type: 'fixed', word: 'bench' },
-  { id: 'c3', type: 'fixed', word: 'hundred' },
+  {
+    id: 'a3',
+    type: 'fill',
+    options: ['anthill', 'rabbit hole', 'nest'],
+    correct: 'anthill',
+  },
+  { id: 'b3', type: 'fixed', word: 'ant colony' },
+  { id: 'c3', type: 'fixed', word: 'queen' },
 ];
 
 /** Answer groups — cell ids, order inside a group does not matter. */
+/** @type {Group[]} */
 export const GROUPS = [
-  { id: 'scent', word: 'scent', cells: ['a1', 'c1', 'c3'] },
-  { id: 'roll', word: 'roll', cells: ['b1', 'b2', 'c2'] },
-  { id: 'park', word: 'park', cells: ['a2', 'a3', 'b3'] },
+  { id: 'fur', word: 'fur', kind: 'link', cells: ['a1', 'a2', 'c2'] },
+  { id: 'ant', word: 'ant', kind: 'link', cells: ['a3', 'b3', 'c3'] },
+  { id: 'ship', word: 'ship', kind: 'rebus', cells: ['b1', 'b2', 'c1'] },
 ];
 
-/** Final theme shown on results: scent + roll + park = central park */
+/** Final theme shown on results: fur + ant + ship = friendship */
 export const THEME = {
-  word: 'central park',
-  icons: ['scent', 'roll', 'park'],
+  word: 'friendship',
+  icons: ['fur', 'ant', 'ship'],
 };
 
 /**
  * Top-strip hint reveal order (not board tiles).
- * Hint 1 → scent (rebus), Hint 2 → roll (link), Hint 3 → park (link).
+ * Hint 1 → fur (link), Hint 2 → ant (link), Hint 3 → ship (rebus).
  */
-export const HINT_REVEAL_ORDER = ['scent', 'roll', 'park'];
+export const HINT_REVEAL_ORDER = ['fur', 'ant', 'ship'];
 export const MAX_HINTS = 3;
 
 /**
  * Post-attempt tint when ≥2 tiles in a failed swipe belong to one unsolved group.
- * rebus (scent) = dark, link 1 (roll) = medium, link 2 (park) = light
+ * rebus (ship) = dark, link 1 (fur) = medium, link 2 (ant) = light
  */
 export const GROUP_COLORS = {
-  scent: '#00008B',
-  roll: '#0000CD',
-  park: '#ADD8E6',
+  ship: '#00008B',
+  fur: '#0000CD',
+  ant: '#ADD8E6',
 };
 
 /** @param {string} cellId */
@@ -96,20 +98,30 @@ export function colorForGroup(groupId) {
 
 /**
  * Allowed sequences for solving the three groups (by group id).
- * Scent is not swipeable until roll (c2) is solved and pathable.
+ * Fur is not swipeable until ship (b2) is solved and pathable.
  */
 export const VALID_SEQUENCES = [
-  ['roll', 'scent', 'park'],
-  ['roll', 'park', 'scent'],
-  ['park', 'roll', 'scent'],
+  ['ship', 'fur', 'ant'],
+  ['ship', 'ant', 'fur'],
+  ['ant', 'ship', 'fur'],
 ];
 
 export const COLLECTIBLE = {
-  number: '003',
-  word: 'central park',
+  number: '004',
+  word: 'friendship',
 };
 
 export const MAX_LIVES = 3;
+
+/** Correct fill-in picks, keyed by cell id. */
+export function correctFillAnswers() {
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const cell of BOARD) {
+    if (cell.type === 'fill' && cell.correct) out[cell.id] = cell.correct;
+  }
+  return out;
+}
 
 /** Compare two cell-id lists as unordered sets. */
 export function sameCellSet(a, b) {

@@ -77,6 +77,10 @@
       Swipe across tiles <strong>orthogonally</strong> — only horizontal or vertical moves along
       shared edges. Diagonals do not count.
     </p>
+    <p>
+      Once a group is solved, those tiles are <strong>eliminated</strong>. You can still swipe
+      over the empty space to reach icons that are no longer next to each other.
+    </p>
 
     <div class="ortho" aria-hidden="true">
       <div class="ortho-grid">
@@ -124,6 +128,23 @@
           <p class="caption muted bad">✗ No diagonals</p>
         </div>
       </div>
+
+      <p class="caption">Swipe through an eliminated tile</p>
+      <div class="mini-board">
+        {#each Array(9) as _, i}
+          {@const order = i === 0 ? 1 : i === 2 ? 2 : i === 5 ? 3 : 0}
+          {@const cleared = i === 1}
+          <span
+            class="mini-tile"
+            class:on-path={order > 0}
+            class:cleared
+            class:through={cleared}
+          >
+            {#if order}<span class="swipe-num">{order}</span>{/if}
+          </span>
+        {/each}
+      </div>
+      <p class="caption muted">The faded tile is gone — path through it to connect 1 → 2 → 3</p>
     </div>
   </section>
 
@@ -459,6 +480,10 @@
     margin-top: 0.5rem;
   }
 
+  .swipe-demo .swipe-pair + .caption {
+    margin-top: 0.85rem;
+  }
+
   .swipe-pair {
     display: flex;
     justify-content: center;
@@ -511,6 +536,15 @@
   .mini-tile.bad-path {
     background: #fdf0f0;
     box-shadow: inset 0 0 0 2px #c45b5b;
+  }
+
+  .mini-tile.cleared {
+    background: var(--gist-surface-alt, #eef3f6);
+    opacity: 0.45;
+  }
+
+  .mini-tile.cleared.through {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--gist-primary) 50%, transparent);
   }
 
   .swipe-num {

@@ -4,19 +4,10 @@
  */
 
 /** Bump when icon binaries change so production/CDN caches refresh. */
-const ICON_CACHE = 'v16';
+const ICON_CACHE = 'v18';
 
 /** Emoji glyphs keyed by normalized icon id. */
-const EMOJI_ICONS = {
-  roll: '🧻',
-  dollar: '$',
-  divide: '÷',
-  multiply: 'x',
-  addition: '+',
-  hundred: '💯',
-  tree: '🌳',
-  slide: '🛝',
-};
+const EMOJI_ICONS = {};
 
 /** @param {string} word */
 function iconKey(word) {
@@ -33,19 +24,14 @@ export function iconSrc(word) {
   if (iconEmoji(word)) return '';
   const key = iconKey(word);
   if (!key) return '';
-  if (key === 'picnic') return `/icons/central-park.png?${ICON_CACHE}`;
   return `/icons/${key}.png?${ICON_CACHE}`;
 }
 
 /** Display label for an icon id. */
 export function iconLabel(word) {
   const key = iconKey(word);
-  if (key === 'ferris-wheel') return 'ferris wheel';
-  if (key === 'rolled-cash') return 'rolled cash';
-  if (key === 'rolls-royce') return 'rolls-royce';
-  if (key === 'kaiser-roll') return 'kaiser roll';
-  if (key === 'central-park' || key === 'picnic') return 'central park';
-  if (key === 'x-ray') return 'x-ray';
+  if (key === 'ant-colony') return 'ant colony';
+  if (key === 'rabbit-hole') return 'rabbit hole';
   return word || '';
 }
 

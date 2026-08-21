@@ -22,6 +22,7 @@
     sameCellSet,
     iconsForGroup,
     colorForGroup,
+    correctFillAnswers,
   } from '$lib/puzzleBoard.js';
   import {
     hasPlayedThisWeek,
@@ -74,7 +75,7 @@
   const hintedIds = $derived(HINT_REVEAL_ORDER.slice(0, hintsUsed));
   const hintsLeft = $derived(MAX_HINTS - hintsUsed);
 
-  /** Top strip: scent → roll → park. Shown when solved or revealed by hint. */
+  /** Top strip: fur → ant → ship. Shown when solved or revealed by hint. */
   const slots = $derived(
     THEME.icons.map((id) => {
       const visible = solvedOrder.includes(id) || hintedIds.includes(id);
@@ -96,8 +97,9 @@
   function useHint() {
     if (phase !== 'playing' || hintsUsed >= MAX_HINTS) return;
     hintsUsed += 1;
-    const messages = ['Top rebus revealed', 'Link revealed', 'Link revealed'];
-    feedback = messages[hintsUsed - 1] ?? 'Hint used';
+    const id = HINT_REVEAL_ORDER[hintsUsed - 1];
+    const group = GROUPS.find((g) => g.id === id);
+    feedback = group?.kind === 'rebus' ? 'Top rebus revealed' : 'Link revealed';
   }
 
   onMount(() => {
@@ -505,10 +507,7 @@
       weekKey: week,
       scoreSaved: false,
       answers,
-      fillAnswers: {
-        c1: 'divide',
-        b2: 'rolls-royce',
-      },
+      fillAnswers: correctFillAnswers(),
       collectible,
     });
 
@@ -530,10 +529,7 @@
           weekKey: week,
           scoreSaved: true,
           answers,
-          fillAnswers: {
-            c1: 'divide',
-            b2: 'rolls-royce',
-          },
+          fillAnswers: correctFillAnswers(),
           collectible,
         });
       }
@@ -564,7 +560,7 @@
       </div>
     </header>
 
-    <!-- Top strip: scent → roll → park (solved or hinted) -->
+    <!-- Top strip: fur → ant → ship (solved or hinted) -->
     <div class="word-strip" aria-label="Answer strip">
       {#each slots as slot, i}
         <div
@@ -629,9 +625,9 @@
           class:fill-choice={isFill && !solved}
           class:has-pick={isFill && !!word && !solved}
           class:attempt-hint={inAttemptHint}
-          class:tint-scent={attemptHint?.groupId === 'scent' && inAttemptHint}
-          class:tint-roll={attemptHint?.groupId === 'roll' && inAttemptHint}
-          class:tint-park={attemptHint?.groupId === 'park' && inAttemptHint}
+          class:tint-fur={attemptHint?.groupId === 'fur' && inAttemptHint}
+          class:tint-ant={attemptHint?.groupId === 'ant' && inAttemptHint}
+          class:tint-ship={attemptHint?.groupId === 'ship' && inAttemptHint}
           style={attemptTint ? `--group-tint: ${attemptTint}` : ''}
           data-cell-id={cell.id}
           role="gridcell"
@@ -659,7 +655,7 @@
                   data-fill-option={option}
                 >
                   <span class="fill-chip">
-                    <Icon word={option} size={28} label={false} />
+                    <Icon word={option} size={44} label={false} />
                   </span>
                 </span>
               {/each}
@@ -951,33 +947,52 @@
     clip-path: polygon(0 0, 100% 0, 50% 50%);
     align-items: flex-start;
     justify-content: center;
-    padding-top: 7%;
+    padding-top: 3%;
+  }
+
+  .fill-wedge.wedge-0 .fill-chip {
+    transform: translateY(-6%);
   }
 
   .fill-wedge.wedge-1 {
     clip-path: polygon(0 0, 50% 50%, 50% 100%, 0 100%);
     align-items: center;
     justify-content: flex-start;
-    padding-left: 8%;
-    padding-top: 18%;
+    padding-left: 4%;
+    padding-top: 16%;
+  }
+
+  .fill-wedge.wedge-1 .fill-chip {
+    transform: translateX(-10%);
   }
 
   .fill-wedge.wedge-2 {
     clip-path: polygon(100% 0, 100% 100%, 50% 100%, 50% 50%);
     align-items: center;
     justify-content: flex-end;
-    padding-right: 8%;
-    padding-top: 18%;
+    padding-right: 4%;
+    padding-top: 16%;
+  }
+
+  .fill-wedge.wedge-2 .fill-chip {
+    transform: translateX(10%);
   }
 
   .fill-chip {
-    width: 38%;
-    max-width: 44px;
+    width: 49%;
+    max-width: 62px;
     aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
+  }
+
+  .fill-chip :global(.icon),
+  .fill-chip :global(.art),
+  .fill-chip :global(.emoji) {
+    width: 100%;
+    height: 100%;
   }
 
   .fill-wedge.picked {
@@ -1035,16 +1050,16 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--group-tint, transparent) 40%, var(--gist-tile));
   }
 
-  .tile.tint-scent {
-    --group-tint: #00008b;
-  }
-
-  .tile.tint-roll {
+  .tile.tint-fur {
     --group-tint: #0000cd;
   }
 
-  .tile.tint-park {
+  .tile.tint-ant {
     --group-tint: #add8e6;
+  }
+
+  .tile.tint-ship {
+    --group-tint: #00008b;
   }
 
   .feedback {
