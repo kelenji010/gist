@@ -9,7 +9,7 @@
  * Visual board:
  *   mink           hip            she
  *   rabbit         [fill fox]     shh
- *   [fill anthill] ant colony     queen
+ *   ant colony     [fill anthill] queen
  *
  * Groups (order inside each group does not matter):
  *   mink + rabbit + fox = fur                         → [a1,a2,b2]
@@ -41,13 +41,13 @@ export const BOARD = [
   },
   { id: 'c2', type: 'fixed', word: 'shh' },
   // row 3
+  { id: 'a3', type: 'fixed', word: 'ant colony' },
   {
-    id: 'a3',
+    id: 'b3',
     type: 'fill',
-    options: ['anthill', 'rabbit hole', 'nest'],
+    options: ['anthill', 'owl home', 'nest'],
     correct: 'anthill',
   },
-  { id: 'b3', type: 'fixed', word: 'ant colony' },
   { id: 'c3', type: 'fixed', word: 'queen' },
 ];
 

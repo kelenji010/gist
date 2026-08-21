@@ -4,7 +4,7 @@
  */
 
 /** Bump when icon binaries change so production/CDN caches refresh. */
-const ICON_CACHE = 'v18';
+const ICON_CACHE = 'v19';
 
 /** Emoji glyphs keyed by normalized icon id. */
 const EMOJI_ICONS = {};
@@ -31,7 +31,7 @@ export function iconSrc(word) {
 export function iconLabel(word) {
   const key = iconKey(word);
   if (key === 'ant-colony') return 'ant colony';
-  if (key === 'rabbit-hole') return 'rabbit hole';
+  if (key === 'owl-home') return 'owl home';
   return word || '';
 }
 
