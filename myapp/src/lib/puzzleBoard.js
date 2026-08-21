@@ -1,5 +1,5 @@
 /**
- * Puzzle Board 6 — Fur / Ant / Ship
+ * Puzzle Board 4 — Fur / Ant / Ship
  *
  * Coordinate system (letter = column, number = row, row 1 at top):
  *   a1 b1 c1
@@ -7,22 +7,19 @@
  *   a3 b3 c3
  *
  * Visual board:
- *   mink          she           hip
- *   rabbit        shh           [fill fox]
- *   [fill anthill] ant colony   queen
+ *   mink           hip            she
+ *   rabbit         [fill fox]     shh
+ *   [fill anthill] ant colony     queen
  *
  * Groups (order inside each group does not matter):
- *   mink + rabbit + fox = fur                         → [a1,a2,c2]
+ *   mink + rabbit + fox = fur                         → [a1,a2,b2]
  *   anthill + ant colony + queen = ant                → [a3,b3,c3]
- *   shh + she + hip = ship                            → [b1,b2,c1]  (board rebus)
+ *   shh + she + hip = ship                            → [b1,c1,c2]  (board rebus)
  *
  * Theme (shown on results):
  *   fur + ant + ship = friendship
  *
- * Valid solve sequences (fur needs ship solved first to path through b2):
- *   ship → fur → ant
- *   ship → ant → fur
- *   ant → ship → fur
+ * Each group is orthogonally connected, so any solve order is valid.
  */
 
 /** @typedef {{ id: string; type: 'fixed'|'fill'; word?: string; options?: string[]; correct?: string }} Cell */
@@ -32,17 +29,17 @@
 export const BOARD = [
   // row 1
   { id: 'a1', type: 'fixed', word: 'mink' },
-  { id: 'b1', type: 'fixed', word: 'she' },
-  { id: 'c1', type: 'fixed', word: 'hip' },
+  { id: 'b1', type: 'fixed', word: 'hip' },
+  { id: 'c1', type: 'fixed', word: 'she' },
   // row 2
   { id: 'a2', type: 'fixed', word: 'rabbit' },
-  { id: 'b2', type: 'fixed', word: 'shh' },
   {
-    id: 'c2',
+    id: 'b2',
     type: 'fill',
     options: ['fox', 'lamb', 'goat'],
     correct: 'fox',
   },
+  { id: 'c2', type: 'fixed', word: 'shh' },
   // row 3
   {
     id: 'a3',
@@ -57,9 +54,9 @@ export const BOARD = [
 /** Answer groups — cell ids, order inside a group does not matter. */
 /** @type {Group[]} */
 export const GROUPS = [
-  { id: 'fur', word: 'fur', kind: 'link', cells: ['a1', 'a2', 'c2'] },
+  { id: 'fur', word: 'fur', kind: 'link', cells: ['a1', 'a2', 'b2'] },
   { id: 'ant', word: 'ant', kind: 'link', cells: ['a3', 'b3', 'c3'] },
-  { id: 'ship', word: 'ship', kind: 'rebus', cells: ['b1', 'b2', 'c1'] },
+  { id: 'ship', word: 'ship', kind: 'rebus', cells: ['b1', 'c1', 'c2'] },
 ];
 
 /** Final theme shown on results: fur + ant + ship = friendship */
@@ -98,12 +95,15 @@ export function colorForGroup(groupId) {
 
 /**
  * Allowed sequences for solving the three groups (by group id).
- * Fur is not swipeable until ship (b2) is solved and pathable.
+ * All orders are valid — each group is an orthogonal L or row.
  */
 export const VALID_SEQUENCES = [
+  ['fur', 'ant', 'ship'],
+  ['fur', 'ship', 'ant'],
+  ['ant', 'fur', 'ship'],
+  ['ant', 'ship', 'fur'],
   ['ship', 'fur', 'ant'],
   ['ship', 'ant', 'fur'],
-  ['ant', 'ship', 'fur'],
 ];
 
 export const COLLECTIBLE = {
