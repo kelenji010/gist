@@ -189,6 +189,14 @@
 
     <div class="combine-demo" aria-hidden="true">
       <p class="caption">Combine three icons</p>
+      <div class="strip-row">
+        <div class="diagram-slot strip-icon filled">
+          <img src={rebusResult.src} alt="" />
+        </div>
+        <div class="diagram-slot strip-icon empty"><span class="slot-num">2</span></div>
+        <div class="diagram-slot strip-icon empty"><span class="slot-num">3</span></div>
+      </div>
+      <span class="demo-arrow">↑</span>
       <div class="mini-board combine-board">
         {#each Array(9) as _, i}
           {@const step = combinePath[i]}
@@ -199,14 +207,6 @@
             {/if}
           </span>
         {/each}
-      </div>
-      <span class="demo-arrow">↓</span>
-      <div class="strip-row">
-        <div class="diagram-slot strip-icon filled">
-          <img src={rebusResult.src} alt="" />
-        </div>
-        <div class="diagram-slot strip-icon empty"><span class="slot-num">2</span></div>
-        <div class="diagram-slot strip-icon empty"><span class="slot-num">3</span></div>
       </div>
     </div>
   </section>
@@ -626,9 +626,13 @@
     border-top: 1px dashed var(--gist-border);
   }
 
+  .combine-demo .strip-row {
+    margin-bottom: 0.2rem;
+  }
+
   .combine-board {
     grid-template-columns: repeat(3, 52px);
-    margin-bottom: 0.2rem;
+    margin-bottom: 0;
   }
 
   .combine-board .mini-tile {
