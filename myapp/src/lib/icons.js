@@ -24,7 +24,8 @@ export function iconSrc(word) {
   if (iconEmoji(word)) return '';
   const key = iconKey(word);
   if (!key) return '';
-  return `/icons/${key}.png?${ICON_CACHE}`;
+  const file = key === 'queen-ant' ? 'queen' : key;
+  return `/icons/${file}.png?${ICON_CACHE}`;
 }
 
 /** Display label for an icon id. */
@@ -32,6 +33,7 @@ export function iconLabel(word) {
   const key = iconKey(word);
   if (key === 'ant-colony') return 'ant colony';
   if (key === 'owl-home') return 'owl home';
+  if (key === 'queen' || key === 'queen-ant') return 'queen ant';
   return word || '';
 }
 

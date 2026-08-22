@@ -9,11 +9,11 @@
  * Visual board:
  *   mink           hip            she
  *   rabbit         [fill fox]     shh
- *   ant colony     [fill anthill] queen
+ *   ant colony     [fill anthill] queen ant
  *
  * Groups (order inside each group does not matter):
  *   mink + rabbit + fox = fur                         → [a1,a2,b2]
- *   anthill + ant colony + queen = ant                → [a3,b3,c3]
+ *   anthill + ant colony + queen ant = ant            → [a3,b3,c3]
  *   shh + she + hip = ship                            → [c2,c1,b1]  (board rebus)
  *
  * Theme (shown on results):
@@ -48,7 +48,7 @@ export const BOARD = [
     options: ['anthill', 'owl home', 'nest'],
     correct: 'anthill',
   },
-  { id: 'c3', type: 'fixed', word: 'queen' },
+  { id: 'c3', type: 'fixed', word: 'queen ant' },
 ];
 
 /** Answer groups — cell-id order is the results equation (matching is unordered). */
